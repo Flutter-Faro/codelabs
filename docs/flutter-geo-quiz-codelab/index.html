@@ -108,16 +108,23 @@ out;
 <p>On this GeoService class you will find the public method &#34;getLocations()&#34; that will return a list of know locations that are read from the cities_pt.json. For this to happen this class needs to parse the JSON and return a list of Location objects  (with coordinates and location name) to use in the app.</p>
 <p>This JSON Serialization/Deserialization follows Flutter <a href="https://flutter.dev/docs/development/data-and-backend/json#serializing-json-inside-model-classes" target="_blank">Serializing JSON inside model class</a> guideline.</p>
 <pre><code>import &#39;dart:convert&#39;;
+import &#39;package:flutter/material.dart&#39;;
 import &#39;package:flutter_geo_quiz/models/location.dart&#39;;
 
 import &#39;package:flutter/services.dart&#39; show rootBundle;
 
+import &#39;../api/overpass_api.dart&#39;;
+import &#39;../models/query_location.dart&#39;;
+import &#39;../models/response_location.dart&#39;;
+import &#39;../models/search_type.dart&#39;;
+
 class GeoService {
-
   GeoService({
+    @required this.overpassApi,
     this.fileName = &#39;cities_pt&#39;
-  }): assert(fileName != &#39;&#39;);
+  }): assert(overpassApi != null);
 
+  final OverpassApi overpassApi;
   final String fileName;
 
   List&lt;Location&gt; _cachedList;
@@ -131,6 +138,33 @@ class GeoService {
     return _cachedList;
   }
 
+  Future&lt;List&lt;Location&gt;&gt; getEntitiesInArea({
+    Location center, SearchType type, double radiusInMetres = 5000
+  }) async {
+    List&lt;ResponseLocation&gt; fetchResult = await this.overpassApi.fetchLocationsAroundCenter(
+      QueryLocation(
+        longitude: center.longitude,
+        latitude: center.latitude
+      ),
+      type.tags,
+      radiusInMetres
+    );
+
+    List&lt;Location&gt; result = [];
+
+    fetchResult.forEach((element) {
+      result.add(
+        Location(
+          longitude: element.longitude,
+          latitude: element.latitude,
+          name: element.name
+        )
+      );
+    });
+
+    return result;
+  }
+
   Future&lt;Map&lt;dynamic, dynamic&gt;&gt; _getJsonFromFile(String fileName) async {
     String jsonString = await rootBundle.loadString(&#39;assets/locations/$fileName.json&#39;);
 
@@ -140,7 +174,8 @@ class GeoService {
   List&lt;Location&gt; _jsonToLocations(Map&lt;dynamic, dynamic&gt; json) {
     List&lt;Location&gt; locations = [];
 
-    // iterate over the &#34;elements&#34; to get location information from JSON
+    // TODO: Or validate here? Or both?
+
     for (var element in json[&#34;elements&#34;]) {
       locations.add(
         Location.fromJson(element)
@@ -152,7 +187,7 @@ class GeoService {
 }
 </code></pre>
 <p>The location class is the object used to encapsulate, you guessed, a location with coordinates and a name. It implements the deserialization with method &#34;fromJson()&#34;.</p>
-<p>Create the &#34;models/location.dart&#34; file with the Location class.</p>
+<p>Create the &#34;lib/models/location.dart&#34; file with the Location class.</p>
 <pre><code>class Location {
   final double longitude;
   final double latitude;
@@ -194,7 +229,7 @@ out body;
 <p>You can test this in Overpass-turbo</p>
 <p class="image-container"><img src="img/5a99505694897dac.png"></p>
 <p>Now for the flutter app, lets create some models to encapsulate this query.</p>
-<p>Create the file &#34;models/overpass_query.dart&#34;</p>
+<p>Create the file &#34;lib/models/overpass_query.dart&#34;</p>
 <pre><code>class OverpassQuery {
 
   String output;
@@ -223,7 +258,7 @@ out body;
   }
 }
 </code></pre>
-<p>Create the file &#34;models/set_element.dart&#34;</p>
+<p>Create the file &#34;lib/models/set_element.dart&#34;</p>
 <pre><code>class SetElement {
   final Map&lt;String, String&gt; tags;
   final LocationArea area;
@@ -248,7 +283,7 @@ out body;
   }
 }
 </code></pre>
-<p>Create the file &#34;models/location_area.dart&#34;</p>
+<p>Create the file &#34;lib/models/location_area.dart&#34;</p>
 <pre><code>class LocationArea {
   final double longitude;
   final double latitude;
