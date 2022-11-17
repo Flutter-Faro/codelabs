@@ -1,0 +1,946 @@
+
+<!doctype html>
+
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <meta name="theme-color" content="#4F7DC9">
+  <meta charset="UTF-8">
+  <title>Flutter Games Workshop - FlutterFaro #2 - Flutter GEO Quiz Code Lab</title>
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Source+Code+Pro:400|Roboto:400,300,400italic,500,700|Roboto+Mono">
+  <link rel="stylesheet" href="//fonts.googleapis.com/icon?family=Material+Icons">
+  <link rel="stylesheet" href="https://storage.googleapis.com/claat-public/codelab-elements.css">
+  <style>
+    .success {
+      color: #1e8e3e;
+    }
+    .error {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <google-codelab-analytics gaid="UA-49880327-14"></google-codelab-analytics>
+  <google-codelab codelab-gaid=""
+                  id="flutter-geo-quiz-codelab"
+                  title="Flutter Games Workshop - FlutterFaro #2 - Flutter GEO Quiz Code Lab"
+                  environment="web"
+                  feedback-link="https://github.com/flutter-faro/codelabs/blob/master/markdown/flutter-geo-quiz-codelab">
+    
+      <google-codelab-step label="What you&#39;ll learn: Overview" duration="5">
+        <p>This codelab was created based on Marc Gerken tutorial. You can find it <a href="https://www.flutterclutter.dev/flutter/tutorials/creating-a-geo-game/2020/1893/" target="_blank">here</a>.</p>
+<p>The idea is to create a simple single player Quiz Game app with <a href="https://flutter.dev" target="_blank">Flutter</a> and around GEO/map data. The flutter app will have city data stored and query <a href="https://www.openstreetmap.org/" target="_blank">OpenStreetMap</a> to fetch information about the quiz questions being made to the user. It will also display a map with a area regarding the quiz question being made to help user to think in the correct answer. The the user will see the correct response (fetched from OpenStreetMap) and will move to the next one.</p>
+<p>So for the next hours we will be learning about how to connect to <a href="https://wiki.openstreetmap.org/wiki/API" target="_blank">OpenStreetMap REST API</a> (via <a href="https://wiki.openstreetmap.org/wiki/Overpass_API" target="_blank">Overpass API</a>, using <a href="https://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL" target="_blank">Overpass Query Language</a>) to fetch the geo/map data. And how to create a UI to:</p>
+<ul>
+<li>display quiz question</li>
+<li>display map</li>
+<li>display city and area regarding the quiz question</li>
+<li>action button to see see the quiz response</li>
+<li>action button to go to next quiz question</li>
+</ul>
+<p>User will see a question screen with the area around a place. <img src="img/9d26829b27abfec3.png"></p>
+<p>Then by pressing the blue button, the solution will be presented in similar map, showing how many &#34;elements&#34; exist in the area using red dot markers. <img src="img/3aec894f2f9f2d0d.png"></p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="What you need: Prerequisites" duration="7">
+        <h2 is-upgraded>Prerequisites</h2>
+<p>⚠️ Required materials</p>
+<p>Computer with internet access :). For the best experience, the laptop should have <a href="https://www.flutter.dev/" target="_blank">Flutter</a> installed on it prior to starting the codelab to save time. Windows/Linux/Mac would all be fine.</p>
+<p>Check out: <a href="https://flutter.dev/docs/get-started/install" target="_blank">Install Flutter</a> After you should be able to run <code>flutter doctor</code> without any errors.</p>
+<p>A device and cable to connect to the laptop (iOS or Android ) OR an Emulator (iOS or Android). For Android you can install <a href="https://developer.android.com/studio" target="_blank">Android Studio</a> or the &#34;Command line tools only&#34;.</p>
+<p><a href="https://code.visualstudio.com/" target="_blank">VS Code</a> installed with Dart and Flutter Extensions.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Create Flutter App" duration="0">
+        <p>Make sure to run &#34;flutter doctor&#34; to check if everything is ok and there are no problems with your flutter installation.</p>
+<p>To create a new flutter app, just run</p>
+<p><code>flutter create flutter_geo_quiz</code></p>
+<p>If all runs properly...</p>
+<p class="image-container"><img src="img/8f75eece8bf314d9.png"></p>
+<p>And test run the app by executing <code>cd flutter_geo_quiz; flutter run</code></p>
+<p>You should now have your Flutter demo app running.</p>
+<p class="image-container"><img src="img/6efdb3826e906f8e.png"></p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Prepare GEO Data" duration="0">
+        <p>For this step we are going to use OpenStreetMap to provide the GEO data, using Overpass API. For this we need to use <a href="https://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL" target="_blank">Overpass Query Language</a> to retrieve the data.</p>
+<p>Query to getch Portugal data with cities and towns:</p>
+<pre><code>[out:json][timeout:80];
+
+
+area[&#34;ISO3166-1&#34;=&#34;PT&#34;][admin_level=2]-&gt;.portugal;
+
+(
+
+  node[&#34;place&#34;=&#34;town&#34;](if: t[&#34;population&#34;] &gt; 20000)(area.portugal);
+
+  node[&#34;place&#34;=&#34;city&#34;](area.portugal);
+
+);
+
+
+out;
+</code></pre>
+<p>To test and fetch the data, we are going to use <a href="https://overpass-turbo.eu/" target="_blank">Overpass-turbo</a>. It allows to test the query and export the data in OSM format using JSON.</p>
+<p>Copy the query to Overpass-turbo and click &#34;RUN&#34;</p>
+<p class="image-container"><img src="img/8fa30558c4bf700f.png"></p>
+<p>then click &#34;Export&#34;, copy raw OSM data</p>
+<p class="image-container"><img src="img/fe5a7d73f013abc8.png"></p>
+<p>Now that you have the data in the clipboard, we need to save it somewhere. Create the &#34;assets&#34; directory inside the flutter app, create a sub-directory &#34;locations&#34; and inside a file named &#34;cities_pt.json&#34;. Open the &#34;cities_pt.json&#34; file, past data and save file.</p>
+<p class="image-container"><img src="img/2dff68b4c0d0138.png"></p>
+<p>This file will be used to pick random city to make quiz questions and retrieve information from OpenstreetMap.</p>
+<p>For the flutter app to include this and other asset files, we need to configure the assets path in pubspec.yml</p>
+<pre><code>assets:
+  - assets/locations/
+</code></pre>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Connecting to GEO Locations" duration="0">
+        <p>To connecting to the cities and towns GEO data we create a &#34;services/geo_service.dart&#34; file to encapsulate fetching the data from the cities_pt.json file.</p>
+<p>On this GeoService class you will find the public method &#34;getLocations()&#34; that will return a list of know locations that are read from the cities_pt.json. For this to happen this class needs to parse the JSON and return a list of Location objects  (with coordinates and location name) to use in the app.</p>
+<p>This JSON Serialization/Deserialization follows Flutter <a href="https://flutter.dev/docs/development/data-and-backend/json#serializing-json-inside-model-classes" target="_blank">Serializing JSON inside model class</a> guideline.</p>
+<pre><code>import &#39;dart:convert&#39;;
+import &#39;package:flutter_geo_quiz/models/location.dart&#39;;
+
+import &#39;package:flutter/services.dart&#39; show rootBundle;
+
+class GeoService {
+
+  GeoService({
+    this.fileName = &#39;cities_pt&#39;
+  }): assert(fileName != &#39;&#39;);
+
+  final String fileName;
+
+  List&lt;Location&gt; _cachedList;
+
+  Future&lt;List&lt;Location&gt;&gt; getLocations() async {
+    if (_cachedList == null) {
+      Map&lt;dynamic, dynamic&gt; json = await _getJsonFromFile(fileName);
+      _cachedList = _jsonToLocations(json);
+    }
+
+    return _cachedList;
+  }
+
+  Future&lt;Map&lt;dynamic, dynamic&gt;&gt; _getJsonFromFile(String fileName) async {
+    String jsonString = await rootBundle.loadString(&#39;assets/locations/$fileName.json&#39;);
+
+    return jsonDecode(jsonString);
+  }
+
+  List&lt;Location&gt; _jsonToLocations(Map&lt;dynamic, dynamic&gt; json) {
+    List&lt;Location&gt; locations = [];
+
+    // iterate over the &#34;elements&#34; to get location information from JSON
+    for (var element in json[&#34;elements&#34;]) {
+      locations.add(
+        Location.fromJson(element)
+      );
+    }
+
+    return locations;
+  }
+}
+</code></pre>
+<p>The location class is the object used to encapsulate, you guessed, a location with coordinates and a name. It implements the deserialization with method &#34;fromJson()&#34;.</p>
+<p>Create the &#34;models/location.dart&#34; file with the Location class.</p>
+<pre><code>class Location {
+  final double longitude;
+  final double latitude;
+  final String name;
+
+  Location({
+    this.longitude,
+    this.latitude,
+    this.name,
+  });
+
+
+  Location.fromJson(Map&lt;dynamic, dynamic&gt; json) :
+    longitude = json[&#39;lon&#39;],
+    latitude = json[&#39;lat&#39;],
+    name = json[&#39;tags&#39;][&#39;name&#39;];
+
+}
+</code></pre>
+<p>So all set to access towns and cities information from JSON elements and return a list of Locations.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Query entities" duration="0">
+        <p>When the game starts and to ask a question we need to query about the entities on that question. To do that we will user Overpass QL to query for them around a specific coordinate.</p>
+<p>Overpass QL example:</p>
+<pre><code>[out:json][timeout:25];
+
+
+(
+
+  node[&#34;brand&#34;=&#34;McDonald&#39;s&#34;][&#34;amenity&#34;=&#34;fast_food&#34;][&#34;cuisine&#34;=&#34;burger&#34;](around:50000,37.0162727,-7.9351771);
+
+);
+
+out body;
+</code></pre>
+<p>You can test this in Overpass-turbo</p>
+<p class="image-container"><img src="img/5a99505694897dac.png"></p>
+<p>Now for the flutter app, lets create some models to encapsulate this query.</p>
+<p>Create the file &#34;models/overpass_query.dart&#34;</p>
+<pre><code>class OverpassQuery {
+
+  String output;
+  int timeout;
+  List&lt;SetElement&gt; elements;
+
+  OverpassQuery({
+    this.output,
+    this.timeout,
+    this.elements
+  });
+
+
+  Map&lt;String, String&gt; toMap() {
+    String elementsString = &#39;&#39;;
+
+    for (SetElement element in elements) {
+      elementsString += &#39;$element;&#39;;
+    }
+
+    String data = &#39;[out:$output][timeout:$timeout];($elementsString);out;&#39;;
+
+    return &lt;String, String&gt; {
+      &#39;data&#39;: data
+    };
+  }
+}
+</code></pre>
+<p>Create the file &#34;models/set_element.dart&#34;</p>
+<pre><code>class SetElement {
+  final Map&lt;String, String&gt; tags;
+  final LocationArea area;
+
+  SetElement({
+    this.tags,
+    this.area
+  });
+
+  @override
+  String toString() {
+
+    String tagString = &#39;&#39;;
+
+    tags.forEach((key, value) {
+      tagString += &#39;[&#34;$key&#34;=&#34;$value&#34;]&#39;;
+    });
+
+    String areaString = &#39;(around:${area.radius},${area.latitude},${area.longitude})&#39;;
+
+    return &#39;node$tagString$areaString&#39;;
+  }
+}
+</code></pre>
+<p>Create the file &#34;models/location_area.dart&#34;</p>
+<pre><code>class LocationArea {
+  final double longitude;
+  final double latitude;
+  final double radius;
+
+  LocationArea({
+    this.longitude,
+    this.latitude,
+    this.radius
+  });
+}
+</code></pre>
+<p>Create the file &#34;models/response_location.dart&#34;</p>
+<pre><code>class ResponseLocation {
+
+  double longitude;
+  double latitude;
+  String name;
+  String city;
+  String street;
+
+  ResponseLocation({
+    this.longitude,
+    this.latitude,
+    this.name,
+    this.city,
+    this.street,
+  });
+
+  ResponseLocation.fromJson(Map&lt;dynamic, dynamic&gt; json) {
+
+    this.longitude = json[&#39;lon&#39;];
+    this.latitude = json[&#39;lat&#39;];
+
+    Map&lt;String, dynamic&gt; tags = json[&#39;tags&#39;];
+
+    if (tags == null) {
+      return;
+    }
+
+    this.name = json[&#39;tags&#39;][&#39;name&#39;];
+    this.city = json[&#39;tags&#39;][&#39;addr:city&#39;];
+    this.street = json[&#39;tags&#39;][&#39;addr:street&#39;];
+  }
+}
+</code></pre>
+<p>Create the file &#34;models/query_location.dart&#34;</p>
+<pre><code>class QueryLocation {
+  final double longitude;
+  final double latitude;
+
+  QueryLocation({
+    this.longitude,
+    this.latitude,
+  });
+
+}
+</code></pre>
+<p>Now that we know how to represent a OverpassQuery, we create the class that will make the Overpass API call to retrieve data.</p>
+<p>Create &#34;lib/api&#34; directory and inside the &#34;lib/api/overpass_query.dart&#34; file..</p>
+<pre><code>import &#39;dart:convert&#39;;
+
+import &#39;package:xml/xml.dart&#39;;
+import &#39;package:http/http.dart&#39;;
+import &#39;../models/overpass_query.dart&#39;;
+
+class OverpassApi {
+  static String _apiUrl = &#39;overpass-api.de&#39;;
+  static String _path = &#39;/api/interpreter&#39;;
+
+  Future&lt;List&lt;ResponseLocation&gt;&gt; fetchLocationsAroundCenter(QueryLocation center, Map&lt;String, String&gt; filter, double radius) async {
+    Request request = Request(&#39;GET&#39;, Uri.https(_apiUrl, _path));
+
+    request.bodyFields = _buildRequestBody(center, filter, radius);
+
+    String responseText;
+
+    try {
+      StreamedResponse response = await Client().send(request).timeout(const Duration(seconds: 5));
+
+      responseText = await response.stream.bytesToString();
+    }catch (exception) {
+      print(exception);
+      return Future.error(exception);
+    }
+
+    var responseJson;
+
+    try {
+      responseJson = jsonDecode(responseText);
+
+    }catch (exception) {
+
+      String error = &#39;&#39;;
+
+      final document = XmlDocument.parse(responseText);
+      final paragraphs = document.findAllElements(&#34;p&#34;);
+
+      paragraphs.forEach((element) {
+        if (element.text.trim() == &#39;&#39;) {
+          return;
+        }
+        error += &#39;${element.text.trim()}&#39;;
+      });
+
+      return Future.error(error);
+    }
+
+    if (responseJson[&#39;elements&#39;] == null) {
+      return [];
+    }
+
+    List&lt;ResponseLocation&gt; resultList = [];
+
+    for (var location in responseJson[&#39;elements&#39;]) {
+      resultList.add(ResponseLocation.fromJson(location));
+    }
+
+    return resultList;
+  }
+
+  Map&lt;String, String&gt; _buildRequestBody(QueryLocation center, Map&lt;String, String&gt; filter, double radius) {
+    OverpassQuery query = new OverpassQuery(
+      output: &#39;json&#39;,
+      timeout: 25,
+      elements: [
+        SetElement(
+          tags: filter,
+          area: LocationArea(
+            longitude: center.longitude,
+            latitude: center.latitude,
+            radius: radius
+          )
+        )
+      ],
+    );
+
+    return query.toMap();
+  }
+}
+</code></pre>
+<p>The public method &#34;fetchLocationsAroundCenter()&#34; received a Location, tags (used to filter) and a radius distance in meters.</p>
+<p>Now that we have the capacity to query with OverpassAPI class, we need to add this into the GeoService. Open &#34;lib/services/geo_service.dart&#34; file and add the &#34;getEntitiesInArea()&#34; method to it.</p>
+<pre><code>class GeoService{
+
+  ...
+
+  Future&lt;List&lt;Location&gt;&gt; getEntitiesInArea({ Location center, SearchType type, double radiusInMetres = 5000}) async {
+    List&lt;ResponseLocation&gt; fetchResult = await this.overpassApi.fetchLocationsAroundCenter(
+      QueryLocation(
+        longitude: center.longitude,
+        latitude: center.latitude
+      ),
+      type.tags,
+      radiusInMetres
+    );
+
+    List&lt;Location&gt; result = [];
+
+    fetchResult.forEach((element) {
+      result.add(
+        Location(
+          longitude: element.longitude,
+          latitude: element.latitude,
+          name: element.name
+        )
+      );
+    });
+
+    return result;
+  }
+
+  ...
+
+}
+</code></pre>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Search types" duration="0">
+        <p>The GeoService &#34;getEntitiesInArea()&#34; method expects a SearchType. The idea of the search type is to allow to have different kind of terms to search like bars, trees, fire stations, etc. So when making a query for entities around area we pick randomly chosen search type :)</p>
+<p>Create a file inside &#34;assets/search_types.json&#34; which will have a name (singular and plural) and tags to be used in the Overpass query.</p>
+<pre><code>{
+  &#34;elements&#34;: [
+    {
+      &#34;name&#34;: {
+        &#34;singular&#34;: &#34;bar&#34;,
+        &#34;plural&#34;: &#34;bars&#34;
+      },
+      &#34;tags&#34;: {
+        &#34;amenity&#34;: &#34;bar&#34;
+      }
+    },
+    {
+      &#34;name&#34;: {
+        &#34;singular&#34;: &#34;pub&#34;,
+        &#34;plural&#34;: &#34;pubs&#34;
+      },
+      &#34;tags&#34;: {
+        &#34;amenty&#34;: &#34;pub&#34;
+      }
+    },
+    {
+      &#34;name&#34;: {
+        &#34;singular&#34;: &#34;McDonald&#39;s&#34;,
+        &#34;plural&#34;: &#34;McDonald&#39;s&#34;
+      },
+      &#34;tags&#34;: {
+        &#34;brand&#34;: &#34;McDonald&#39;s&#34;,
+        &#34;amenity&#34;: &#34;fast_food&#34;,
+        &#34;cuisine&#34;: &#34;burger&#34;
+      }
+    },
+    {
+      &#34;name&#34;: {
+        &#34;singular&#34;: &#34;street lamp&#34;,
+        &#34;plural&#34;: &#34;street lamps&#34;
+      },
+      &#34;tags&#34;: {
+        &#34;highway&#34;: &#34;street_lamp&#34;
+      }
+    },
+    {
+      &#34;name&#34;: {
+        &#34;singular&#34;: &#34;tree&#34;,
+        &#34;plural&#34;: &#34;trees&#34;
+      },
+      &#34;tags&#34;: {
+        &#34;natural&#34;: &#34;tree&#34;
+      }
+    },
+    {
+      &#34;name&#34;: {
+        &#34;singular&#34;: &#34;memorial&#34;,
+        &#34;plural&#34;: &#34;memorials&#34;
+      },
+      &#34;tags&#34;: {
+        &#34;historic&#34;: &#34;memorial&#34;
+      }
+    },
+    {
+      &#34;name&#34;: {
+        &#34;singular&#34;: &#34;bus stop&#34;,
+        &#34;plural&#34;: &#34;bus stops&#34;
+      },
+      &#34;tags&#34;: {
+        &#34;highway&#34;: &#34;bus_stop&#34;
+      }
+    },
+    {
+      &#34;name&#34;: {
+        &#34;singular&#34;: &#34;fire station&#34;,
+        &#34;plural&#34;: &#34;fire stations&#34;
+      },
+      &#34;tags&#34;: {
+        &#34;amenity&#34;: &#34;fire_station&#34;
+      }
+    },
+    {
+      &#34;name&#34;: {
+        &#34;singular&#34;: &#34;bench&#34;,
+        &#34;plural&#34;: &#34;benches&#34;
+      },
+      &#34;tags&#34;: {
+        &#34;amenity&#34;: &#34;bench&#34;
+      }
+    },
+    {
+      &#34;name&#34;: {
+        &#34;singular&#34;: &#34;village&#34;,
+        &#34;plural&#34;: &#34;villages&#34;
+      },
+      &#34;tags&#34;: {
+        &#34;place&#34;: &#34;village&#34;
+      }
+    },
+    {
+      &#34;name&#34;: {
+        &#34;singular&#34;: &#34;post box&#34;,
+        &#34;plural&#34;: &#34;post boxes&#34;
+      },
+      &#34;tags&#34;: {
+        &#34;amenity&#34;: &#34;post_box&#34;
+      }
+    },
+    {
+      &#34;name&#34;: {
+        &#34;singular&#34;: &#34;recycling container&#34;,
+        &#34;plural&#34;: &#34;recycling containers&#34;
+      },
+      &#34;tags&#34;: {
+        &#34;amenity&#34;: &#34;recycling&#34;
+      }
+    }
+  ]
+}
+
+</code></pre>
+<p>This search_type.json file allows you to extend the game with ease in terms of the questions that can be made to the player.</p>
+<p>Add it to the assets in pubspec.yaml</p>
+<pre><code>  assets:
+    - assets/locations/
+    - assets/search_types.json
+</code></pre>
+<p>Now, similar to GeoService that reads from cities_pt.json file, we need to create a SearchTypeService so that the flutter app can read the search_types.json file.</p>
+<p>Create &#34;lib/services/search_type_service.dart&#34;</p>
+<pre><code>import &#39;dart:convert&#39;;
+import &#39;package:flutter/services.dart&#39; show rootBundle;
+
+class SearchTypeService {
+  List&lt;SearchType&gt; _cachedList;
+
+  Future&lt;List&lt;SearchType&gt;&gt; getSearchTypes() async {
+
+    if (_cachedList == null) {
+      List&lt;dynamic&gt; json = await _getJsonFromFile(&#39;search_types&#39;);
+      _cachedList = _jsonToSearchTypes(json);
+    }
+
+    return _cachedList;
+  }
+
+  Future&lt;List&lt;dynamic&gt;&gt; _getJsonFromFile(String fileName) async {
+    String jsonString = await rootBundle.loadString(&#39;assets/$fileName.json&#39;);
+
+    return jsonDecode(jsonString)[&#39;elements&#39;];
+  }
+
+
+  List&lt;SearchType&gt; _jsonToSearchTypes(List&lt;dynamic&gt; json) {
+    List&lt;SearchType&gt; searchTypes = [];
+    for (var element in json) {
+      searchTypes.add(
+        SearchType.fromJson(element)
+      );
+    }
+
+    return searchTypes;
+  }
+}
+</code></pre>
+<p>Create the file &#34;lib/models/search_type.dart&#34;, used to encalsulate a search type and deserialize the JSON.</p>
+<pre><code>class SearchType {
+  String singular;
+  String plural;
+  Map&lt;String, String&gt; tags;
+
+  SearchType({
+    this.singular,
+    this.plural,
+    this.tags
+  });
+
+
+  SearchType.fromJson(Map&lt;dynamic, dynamic&gt; json) {
+
+    this.singular = json[&#39;name&#39;][&#39;singular&#39;];
+    this.plural = json[&#39;name&#39;][&#39;plural&#39;];
+
+    Map&lt;String, String&gt; tags = new Map();
+
+    json[&#39;tags&#39;].forEach((key, value) {
+      tags[key] = value;
+    });
+
+    this.tags = tags;
+  }
+}
+
+</code></pre>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Quiz Screen" duration="0">
+        <p>Time for the UI. The flutter app uses OpenstreetMap so we can use <a href="https://pub.dev/packages/flutter_map" target="_blank"></a> which is an implementation of popular JS library <a href="https://leafletjs.com/" target="_blank">Leaflet</a>. Lets add this and other dependencies to the pubspec.yaml file.</p>
+<pre><code>...
+environment:
+  sdk: &#34;&gt;=2.11.0 &lt;3.0.0&#34;
+
+...
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  http: 0.12.2
+  xml: 4.5.1
+  flutter_map: 0.10.1+1
+...
+</code></pre>
+<p>After saving the pubspec.yaml file click the &#34;Get Packages&#34; button or run &#34;flutter pub get&#34; in the console from inside the flutter app directory.</p>
+<p>Now we are ready to implement the quiz widget screen.</p>
+<p>Create the directory &#34;lib/screens&#34; and inside the file &#34;quiz.dart&#34; with</p>
+<pre><code>import &#39;dart:math&#39;;
+
+import &#39;package:flutter/material.dart&#39;;
+import &#39;package:flutter_geo_quiz/api/overpass_api.dart&#39;;
+import &#39;package:flutter_geo_quiz/services/geo_service.dart&#39;;
+import &#39;package:flutter_geo_quiz/services/search_type_service.dart&#39;;
+import &#39;package:flutter_map/flutter_map.dart&#39;;
+import &#39;package:latlong/latlong.dart&#39;;
+
+import &#39;../models/location.dart&#39;;
+import &#39;../models/search_type.dart&#39;;
+
+class Quiz extends StatefulWidget {
+  @override
+  _QuizState createState() =&gt; _QuizState();
+}
+
+class _QuizState extends State&lt;Quiz&gt; {
+  final MapController _mapController = new MapController();
+  final OverpassApi _overpassApi = new OverpassApi();
+  GeoService _geoService;
+
+  List&lt;SearchType&gt; _searchTypes = [];
+  List&lt;Location&gt; _locations = [];
+
+  Location _currentLocation;
+  List&lt;Location&gt; _entities = [];
+  SearchType _currentType;
+  bool _answered = false;
+
+  @override
+  void initState() {
+    _geoService = new GeoService(overpassApi: _overpassApi);
+
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
+      _initialize();
+    });
+
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        title: Center(child: Text(&#34;Try to guess! 😃&#34;, style: TextStyle(color: Colors.black))),
+      ),
+      body: Center(
+        child: Stack(
+          children: [
+            _getMap(),
+            _getTopContainer()
+          ],
+        )
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _proceed,
+        child: Icon(Icons.check),
+      ),
+    );
+  }
+
+  void _initialize() async {
+    _searchTypes = await SearchTypeService().getSearchTypes();
+    _locations = await _geoService.getLocations();
+
+    _getNewLocation();
+    _getNewSearchType();
+  }
+
+  void _proceed() async {
+    if (_answered == true) {
+      _showNewQuestion();
+      return;
+    }
+
+    _answerQuestion();
+  }
+
+  void _showNewQuestion() {
+    setState(() {
+      _getNewLocation();
+      _getNewSearchType();
+      _entities = [];
+      _answered = false;
+    });
+  }
+
+  Future _answerQuestion() async {
+    _indicateLoading();
+
+    _entities = await GeoService(overpassApi: _overpassApi).getEntitiesInArea(
+        center: _currentLocation,
+        type: _currentType
+    );
+
+    Navigator.of(context).pop();
+
+    setState(() {
+      _answered = true;
+    });
+  }
+
+  void _getNewSearchType() {
+    _currentType = _searchTypes[Random().nextInt(_searchTypes.length)];
+  }
+
+  void _indicateLoading() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(
+              Radius.circular(8.0)
+            )
+          ),
+          content: Container(
+            child: Text(&#39;Fetching geo data ...&#39;, textAlign: TextAlign.center,)
+          ),
+        );
+      }
+    );
+  }
+
+  void _getNewLocation() {
+    if (_locations.isEmpty) {
+      return;
+    }
+
+    setState(() {
+      _currentLocation = _locations[Random().nextInt(_locations.length)];
+    });
+
+    _mapController.move(
+        new LatLng(_currentLocation.latitude, _currentLocation.longitude),
+        11
+    );
+  }
+
+  FlutterMap _getMap() {
+    return FlutterMap(
+      mapController: _mapController,
+      options: new MapOptions(
+        interactive: false,
+        center: _currentLocation != null ? new LatLng(_currentLocation.latitude, _currentLocation.longitude) : null,
+        zoom: 11,
+      ),
+      layers: [
+        new TileLayerOptions(
+            urlTemplate: &#34;https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png&#34;,
+            subdomains: [&#39;a&#39;, &#39;b&#39;, &#39;c&#39;]
+        ),
+        new MarkerLayerOptions(
+          markers: _getMarkers(),
+        ),
+        new MarkerLayerOptions(
+          markers: _getAreaMarkers(),
+        ),
+      ],
+    );
+  }
+
+  List&lt;Marker&gt; _getMarkers() {
+    List&lt;Marker&gt; markers = [];
+
+    for (Location location in _entities) {
+      markers.add(
+          new Marker(
+            width: 6,
+            height: 6,
+            point: new LatLng(location.latitude, location.longitude),
+            builder: (ctx) =&gt;
+            new Container(
+              decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.red
+              ),
+            ),
+          )
+      );
+    }
+
+    return markers;
+  }
+
+  List&lt;Marker&gt; _getAreaMarkers() {
+    if (_currentLocation == null) {
+      return [];
+    }
+
+    return [new Marker(
+      width: 230.0,
+      height: 230.0,
+      point: new LatLng(_currentLocation.latitude, _currentLocation.longitude),
+      builder: (ctx) =&gt;
+      new Container(
+        decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.blue.withOpacity(0.1),
+            border: Border.all(color: Colors.blueAccent)
+        ),
+      ),
+    )];
+  }
+
+  Container _getTopContainer() {
+    return Container(
+      alignment: Alignment.topCenter,
+      child: Container(
+          padding: EdgeInsets.all(32),
+          height: 160,
+          alignment: Alignment.center,
+          width: double.infinity,
+          color: Colors.white.withOpacity(0.8),
+          child: Text(
+            _getText(),
+            style: TextStyle(fontSize: 24),
+            textAlign: TextAlign.center,
+          )
+      ),
+    );
+  }
+
+  String _getText() {
+    if (_currentLocation == null) {
+      return &#39;&#39;;
+    }
+
+    if (_currentType == null) {
+      return &#39;&#39;;
+    }
+
+    if (_answered == false) {
+      return &#34;How many ${_currentType.plural} are there 5 km around ${_currentLocation.name}?&#34;;
+    }
+
+    return &#34;${_entities.length.toString()} ${_currentType.plural}\naround ${_currentLocation.name}&#34;;
+  }
+}
+</code></pre>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Running the app" duration="0">
+        <p>Now we need to update the &#34;lib/main.dart&#34; so that it uses the Quiz widget and starts the application in the quiz screen.</p>
+<p>Update &#34;lib/main.dart&#34; file</p>
+<pre><code>import &#39;package:flutter/material.dart&#39;;
+
+import &#39;screens/quiz.dart&#39;;
+
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  // This widget is the root of your application.
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: &#39;Flutter GeoGuesser&#39;,
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        visualDensity: VisualDensity.adaptivePlatformDensity,
+      ),
+      home: Quiz(),
+    );
+  }
+}
+</code></pre>
+<p>After save, just click play button on VS code, run application from Android studio or run from the console inside flutter app directory: flutter run</p>
+<p>you should see something similar to this image :)</p>
+<p class="image-container"><img src="img/6710241f384f461.png"></p>
+<p>Now lets discuss a bit this app, should we?</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Takeaways" duration="0">
+        <p>Hope you had some fun creating this app!</p>
+<p>Thank you for participaging in this codelab!</p>
+<p>If you have any feedback, don&#39;t esitate and contact us, we welcome feedback :)</p>
+<p class="image-container"><img src="img/8b429a20cce02356.png"></p>
+
+
+      </google-codelab-step>
+    
+  </google-codelab>
+
+  <script src="https://storage.googleapis.com/claat-public/native-shim.js"></script>
+  <script src="https://storage.googleapis.com/claat-public/custom-elements.min.js"></script>
+  <script src="https://storage.googleapis.com/claat-public/prettify.js"></script>
+  <script src="https://storage.googleapis.com/claat-public/codelab-elements.js"></script>
+  <script src="//support.google.com/inapp/api.js"></script>
+
+</body>
+</html>
