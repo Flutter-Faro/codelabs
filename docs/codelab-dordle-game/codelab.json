@@ -1,0 +1,22 @@
+{
+  "environment": "web",
+  "format": "html",
+  "prefix": "https://storage.googleapis.com",
+  "mainga": "UA-49880327-14",
+  "updated": "2022-11-17T17:43:00Z",
+  "id": "codelab-dordle-game",
+  "duration": 12,
+  "title": "Flutter Games Workshop - FlutterFaro #2 - Dordle Game Code Lab",
+  "summary": "",
+  "source": "codelab-dordle-game.md",
+  "theme": "",
+  "status": [
+    "published"
+  ],
+  "category": null,
+  "tags": [
+    "web"
+  ],
+  "feedback": "https://github.com/danidroid/solace-dev-codelabs/blob/master/markdown/codelab-dordle-game",
+  "url": "codelab-dordle-game"
+}

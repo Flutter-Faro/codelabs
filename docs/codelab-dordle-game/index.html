@@ -1,0 +1,334 @@
+
+<!doctype html>
+
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <meta name="theme-color" content="#4F7DC9">
+  <meta charset="UTF-8">
+  <title>Flutter Games Workshop - FlutterFaro #2 - Dordle Game Code Lab</title>
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Source+Code+Pro:400|Roboto:400,300,400italic,500,700|Roboto+Mono">
+  <link rel="stylesheet" href="//fonts.googleapis.com/icon?family=Material+Icons">
+  <link rel="stylesheet" href="https://storage.googleapis.com/claat-public/codelab-elements.css">
+  <style>
+    .success {
+      color: #1e8e3e;
+    }
+    .error {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <google-codelab-analytics gaid="UA-49880327-14"></google-codelab-analytics>
+  <google-codelab codelab-gaid=""
+                  id="codelab-dordle-game"
+                  title="Flutter Games Workshop - FlutterFaro #2 - Dordle Game Code Lab"
+                  environment="web"
+                  feedback-link="https://github.com/danidroid/solace-dev-codelabs/blob/master/markdown/codelab-dordle-game">
+    
+      <google-codelab-step label="What you&#39;ll learn: Overview" duration="5">
+        <p>Flutter-Faro is part of the Flutter Meetup Network and is bringing some events to the local community related, you guess, with Flutter !! :) Join us!</p>
+<h2 is-upgraded>Doordle Game - a Wordle game alternative</h2>
+<p class="image-container"><img alt="Soly Image Caption" src="img/3e5cda2727a94e8e.png"></p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="What you need: Prerequisites" duration="7">
+        <p>⚠️ Required materials</p>
+<p>Computer with internet access :) The course will run on all of the latest versions of the popular browsers. For the best experience, the laptop should have Flutter installed on it prior to starting the study jam to save time. Windows/Linux/Mac would all be fine.</p>
+<p>Check out: <a href="https://flutter.dev/docs/get-started/install" target="_blank">Setup Flutter</a> After you should be able to run <code>flutter doctor</code> without any errors.</p>
+<p>A device to connect to the laptop (iOS or Android ) OR an Emulator (iOS or Android) <a href="https://developer.android.com/studio" target="_blank">Android Studio</a> or <a href="https://code.visualstudio.com/" target="_blank">VS Code</a> installed with Dart and Flutter Plugins</p>
+<h2 is-upgraded>lets start :D</h2>
+<p class="image-container"><img alt="Game Page" src="img/3b40aa8365cc9b4b.png"></p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Step 1 - main.dart" duration="0">
+        <p>Lets start by creating a new demo project, edit the <code>main.dart</code> file:</p>
+<pre><code language="language-dart" class="language-dart">void main() {
+  runApp(const MyApp());
+}
+</code></pre>
+<pre><code language="language-dart" class="language-dart">class MyApp extends StatelessWidget {
+  const MyApp({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: &#39;Dordle Game&#39;,
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      scaffoldMessengerKey: scaffoldMessengerKey,
+      home: const GamePage(),
+    );
+  }
+}
+</code></pre>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Step 2 - Game Page" duration="0">
+        <p>So now its time to start building the game page, lets start by creating a new <a href="https://api.flutter.dev/flutter/widgets/StatefulWidget-class.html" target="_blank">StatefulWidget</a></p>
+<pre><code language="language-dart" class="language-dart">class GamePage extends StatefulWidget {
+  const GamePage({super.key});
+
+  @override
+  State&lt;GamePage&gt; createState() =&gt; _GamePageState();
+}
+</code></pre>
+<pre><code language="language-dart" class="language-dart">class _GamePageState extends State&lt;GamePage&gt; {
+  
+  @override
+  Widget build(BuildContext context) {
+    // TODO: implement build
+    throw UnimplementedError();
+  }
+}
+</code></pre>
+<p>Will see that this will throw an error, keep calm, will fix that shortly...</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Step 3 - Game UI" duration="0">
+        <p>So, now that we have a red screen in our simulator, lets fix that, by changing the</p>
+<pre><code language="language-dart" class="language-dart">...
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: SafeArea(
+        bottom: false,
+        child: Flex(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          direction: Axis.vertical,
+          children: [],
+        ),
+      ),
+    );
+}
+...
+</code></pre>
+<p>Saving it, will get rid of the red error, but now is plain black!!!</p>
+<p>Lets fix it again, lets create the <code>GameGridView</code> widget and add it to the <code>Flex</code> widget children:</p>
+<pre><code language="language-dart" class="language-dart">...
+Flex(
+    ...
+    children: [
+        GameGridView()
+    ],
+)
+...
+</code></pre>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Step 4 - Game UI - GameGridView" duration="0">
+        <p>Now will start by creating the <code>GameGridView</code> widget:</p>
+<p>Can create this in the same file</p>
+<pre><code language="language-dart" class="language-dart">class GameGridView extends StatelessWidget {
+  const GameGridView({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      flex: 2,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        child: GridView.builder(
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: 25,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                mainAxisSpacing: 0.1,
+                crossAxisSpacing: 0.1,
+                childAspectRatio: 1.0,
+                crossAxisCount: 5),
+            itemBuilder: (BuildContext context, int index) {
+              return Container();
+            }),
+      ),
+    );
+  }
+}
+</code></pre>
+<p>hmm, no changes right? same black plain screen, so much code and no changes!!!</p>
+<p>Lets update create a new <code>GameGridBoxView</code> widget:</p>
+<pre><code language="language-dart" class="language-dart">class GameGridBoxView extends StatelessWidget {
+  const GameGridBoxView({
+    Key? key,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 40,
+      height: 40,
+      margin: const EdgeInsets.all(8),
+      alignment: Alignment.center,
+      decoration: const BoxDecoration(
+        color: Color(0xff858b8b),
+        borderRadius: BorderRadius.all(
+          Radius.circular(8.0),
+        ),
+      ),
+      child: const Text(&#34;&#34;),
+    );
+  }
+}
+</code></pre>
+<p>hmm still nothing?? can you figure out what is missing?</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Step 4 - Game UI - GameGridView" duration="0">
+        <p>Correct!!! will need to change this line in the <code>GridView.builder</code>:</p>
+<pre><code language="language-dart" class="language-dart">    itemBuilder: (BuildContext context, int index) {
+        return Container();
+    }),     
+</code></pre>
+<p>Replace the <code>Container()</code> with <code>GameGridBoxView()</code></p>
+<p>Finally we started to see something!!!</p>
+<p>You can tweak the numbers on the grid to experiment, dont forget to hot-reload to see the changes.</p>
+<p>Ok you got so far, but stil there are much to do.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Step 5 - Keyboard" duration="0">
+        <p>Now that we have the game grid widget in place, lets focus on the Keyboard.</p>
+<p>Go to your <code>pubspec.yaml</code> and add to the <code>dependencies</code> the following keyboard package:</p>
+<pre><code language="language-yaml" class="language-yaml">virtual_keyboard_multi_language:
+    git:
+      url: https://github.com/hassaanalansary/virtual_keyboard_multi_language.git
+      ref: master
+</code></pre>
+<p>Run the <code>pub get</code> to update the project. This will fetch the required package to have a virtual keyboard to capture the characters.</p>
+<p>Now lets build the keyboad widget:</p>
+<pre><code language="language-dart" class="language-dart">Flexible(
+  child: Container(
+    padding: const EdgeInsets.only(bottom: 32),
+    child: VirtualKeyboard(
+      height: 200,
+      textColor: Colors.white,
+      fontSize: 18,
+      type: VirtualKeyboardType.Alphanumeric,
+      alwaysCaps: true,
+    ),
+  ),
+)
+</code></pre>
+<p>Hmm it feels that is missing something, right?</p>
+<p>Q: How can we capture the key events??</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Step 6 - Listen to Keyboard" duration="0">
+        <p>Lets start by adding an Event Listener, so in the <code>VirtualKeyboard</code> widget, add the <code>postKeyPress</code> event listener.</p>
+<pre><code language="language-dart" class="language-dart">...
+VirtualKeyboard(
+  ...
+  postKeyPress: (key) {}
+  ...
+...
+</code></pre>
+<p>This will capture all the clicked keyboard keys.</p>
+<p>Ok, so far we have the Grid view, Keyboard and the event to listen, but how we can fill the squares with the clicked keys?</p>
+<p>Lets start by an example:</p>
+<p>Create a <code>index</code> and a <code>Map</code> that will hold our key and position, like this:</p>
+<pre><code language="language-dart" class="language-dart">int index = 0;
+Map&lt;int, String&gt; words = {};
+</code></pre>
+<p>Add to the current file.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Step 7 - Game logic example" duration="0">
+        <p>Now we&#39;ll do some game logic,</p>
+<p>Then on the <code>postKeyPress</code> event listener lets try by doing this:</p>
+<pre><code language="language-dart" class="language-dart">...
+VirtualKeyboard(
+  ...
+  postKeyPress: (key) {
+    words[index] = key.text;
+  }
+  ...
+...
+</code></pre>
+<p>Now will need to change the <code>GameGridView</code> widget and the <code>GameGridBoxView</code> widget to pass as the arguments the <code>index</code> and the <code>Map</code></p>
+<pre><code language="language-dart" class="language-dart">class GameGridView extends StatelessWidget {
+  const GameGridView({
+    super.key
+    this.index,
+    this.words
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    ...
+    itemBuilder: (BuildContext context, int index) {
+        return GameGridBoxView(index: index, words: words);
+    }),
+    ...
+  }
+  ...
+</code></pre>
+<pre><code language="language-dart" class="language-dart">class GameGridBoxView extends StatelessWidget {
+  const GameGridBoxView({
+    Key? key,
+    this.index,
+    this.words
+  }) : super(key: key);
+
+  final int index;
+  final Map&lt;int, String&gt; words;
+
+  @override
+  Widget build(BuildContext context) {
+    ...
+    child: Text(words[index]?.toUpperCase() ?? &#34;&#34;),
+    ...
+  }
+....
+</code></pre>
+<p>Any errors? do you see something?</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Step 8" duration="0">
+        <p>Ok lets find out what is still missing,</p>
+<p>Tip: how can we change the state?</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Takeaways" duration="0">
+        <p>Hope you had some fun creating this app!</p>
+<p>Thank you for participaging in this codelab!</p>
+<p>If you have any feedback, don&#39;t esitate and contact us, we welcome feedback :)</p>
+<p class="image-container"><img src="img/8b429a20cce02356.png"></p>
+<p>Thanks for participating in this codelab!</p>
+
+
+      </google-codelab-step>
+    
+  </google-codelab>
+
+  <script src="https://storage.googleapis.com/claat-public/native-shim.js"></script>
+  <script src="https://storage.googleapis.com/claat-public/custom-elements.min.js"></script>
+  <script src="https://storage.googleapis.com/claat-public/prettify.js"></script>
+  <script src="https://storage.googleapis.com/claat-public/codelab-elements.js"></script>
+  <script src="//support.google.com/inapp/api.js"></script>
+
+</body>
+</html>
