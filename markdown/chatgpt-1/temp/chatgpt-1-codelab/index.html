@@ -1,0 +1,287 @@
+
+<!doctype html>
+
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <meta name="theme-color" content="#4F7DC9">
+  <meta charset="UTF-8">
+  <title>Flutter ChatGPT Workshop - FlutterFaro #3</title>
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Source+Code+Pro:400|Roboto:400,300,400italic,500,700|Roboto+Mono">
+  <link rel="stylesheet" href="//fonts.googleapis.com/icon?family=Material+Icons">
+  <link rel="stylesheet" href="https://storage.googleapis.com/claat-public/codelab-elements.css">
+  <style>
+    .success {
+      color: #1e8e3e;
+    }
+    .error {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <google-codelab-analytics gaid="UA-49880327-14"></google-codelab-analytics>
+  <google-codelab codelab-gaid=""
+                  id="chatgpt-1-codelab"
+                  title="Flutter ChatGPT Workshop - FlutterFaro #3"
+                  environment="web"
+                  feedback-link="https://github.com/flutter-faro/codelabs/blob/master/markdown/chatgpt-1-codelab">
+    
+      <google-codelab-step label="What you&#39;ll learn: Overview" duration="0">
+        <p>This codelab is about creating a Chat app to chat with Open AI.</p>
+<p>The idea is to create a simple chat app for the user to be able to interact with different AI models of Open AI. For the purpose of this workshop we will focus on text completion models (text-davinci) and image models (dall-e)</p>
+<p>For the next hours we will be learning about:</p>
+<ul>
+<li>Create a flutter app from scratch</li>
+<li>Structure the flutter app to have a chat interface</li>
+<li>Create the API mechanism to communicate with Open AI&#39;s text-davinci</li>
+<li>Create the API mechanism to communicate with Open AI&#39;s images interface (DALL-E)</li>
+<li>Show a Whisper flutter app example</li>
+</ul>
+<p class="image-container"><img src="img/82d9cf7ddb35fe9a.jpg"></p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="What you need: Prerequisites" duration="0">
+        <h2 is-upgraded>Prerequisites</h2>
+<p>⚠️ Required materials</p>
+<p>Computer with internet access :). For the best experience, the laptop should have <a href="https://www.flutter.dev/" target="_blank">Flutter</a> installed on it prior to starting the codelab to save time. Windows/Linux/Mac would all be fine.</p>
+<p>Check out: <a href="https://flutter.dev/docs/get-started/install" target="_blank">Install Flutter</a> After you should be able to run <code>flutter doctor</code> without any errors.</p>
+<p>A device and cable to connect to the laptop (iOS or Android ) OR an Emulator (iOS or Android). For Android you can install <a href="https://developer.android.com/studio" target="_blank">Android Studio</a> or the &#34;Command line tools only&#34;.</p>
+<p><a href="https://code.visualstudio.com/" target="_blank">VS Code</a> installed with Dart and Flutter Extensions.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Create Flutter App" duration="0">
+        <p>Make sure to run &#34;flutter doctor&#34; to check if everything is ok and there are no problems with your flutter installation.</p>
+<p>To create a new flutter app, just run</p>
+<p><code>flutter create chatty</code></p>
+<p>If all runs properly...</p>
+<p class="image-container"><img src="img/f89a97a1f9b7d26.jpg"></p>
+<p>And test run the app by executing <code>cd chatty; flutter run</code></p>
+<p>You should now have your Flutter demo app running.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Prepare ChatGPT stuff" duration="0">
+        <p>We are going to create an app called Chatty.</p>
+<h2 is-upgraded>Chatty will be responsible for relaying our communications to OpenAI:</h2>
+<ol type="1">
+<li>Set up a simple screen with a text input, a button that sends the text prompt</li>
+<li>Set AppBar, identifying our AI model we&#39;re talking to.</li>
+<li>Set up the screen with the chat&#39;s history, composed of bubbles. Our messages appear on bubbles from the right side. Open AI&#39;s messages appear on bubbles comming from the left side.</li>
+</ol>
+<p class="image-container"><img src="img/4f44cfee026aa028.jpg"></p>
+<p>Lets create a <code>StatefulWidget</code> called ‘ChatView&#39; this will be our screen to hold the message bubbles and the input to request.</p>
+<p>On creating a new <code>StatefulWidget</code> you should have something this:</p>
+<pre><code>class ChatView extends StatefulWidget {
+    const ChatView({Key? key}) : super(key: key);
+
+    @override
+    State&lt;ChatView&gt; createState() =&gt; _ChatViewState();
+}
+</code></pre>
+<pre><code>class _ChatViewState extends State&lt;ChatView&gt; {
+    
+    @override
+    Widget build(BuildContext context) {
+        ....
+    }
+}
+</code></pre>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="ChatView" duration="0">
+        <p>So you have created a new <code>StatefulWidget</code>, now lets complete it, whats missing?</p>
+<p>Right, so we need to add a ListView to hold the message bubbles and a TextField.</p>
+<pre><code>class _ChatViewState extends State&lt;ChatView&gt; {
+    
+    @override
+    Widget build(BuildContext context) {
+        return Scaffold(
+            appBar: AppBar(
+                title: const Text(&#34;Chat&#34;),
+            ),
+            body: Column(
+                children: [
+                    ListView.builder(
+                        itemCount: 0,
+                        itemBuilder: (BuildContext context, int index) {
+
+                        }),
+                    TextFormField()
+            ]));
+    }
+}
+</code></pre>
+<p>Hmm 🤔 is this all?</p>
+<p>Hehe of course its still imcomplete, lets think, we need somehow to store the messages to be presented and added to the ListView.</p>
+<p>Ok no problem!</p>
+<p>Lets create a List data <code>final List<String> _messages</code></p>
+<pre><code>class _ChatViewState extends State&lt;ChatView&gt; {
+
+    final List&lt;String&gt; _messages = [];
+
+    @override
+    Widget build(BuildContext context) {
+        ....
+}
+
+</code></pre>
+<p>Ok, try to do a hot reload to apply the changes.</p>
+<p>So, now we need to focus on the TextField to listen for keyboard changes:</p>
+<pre><code>class _ChatViewState extends State&lt;ChatView&gt; {
+
+    final List&lt;String&gt; _messages = [];
+
+    @override
+    Widget build(BuildContext context) {
+        ....
+        ListView.builder(...),
+        TextFormField(
+
+            /// add this:
+            textInputAction: TextInputAction.done,
+            onFieldSubmitted: (value) {
+
+            }
+        )
+        ....
+}
+</code></pre>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Open AI&#39;s API Flow" duration="0">
+        <p>To give you an idea of what will happen, this flow show&#39;s the process for requesting the API:</p>
+<p class="image-container"><img src="img/a58ac3a231ad865.jpg"></p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Connecting to API" duration="0">
+        <p>Now is the fun part, requesting stuff!!!</p>
+<ol type="1">
+<li>Lets create a new function for doing the request, you can create this funtion below the <code>Widget build(BuildContext context) {}</code> and name it ‘request&#39; and recieves a String as the only argument. For doing the requests we&#39;ll use the package ‘Dio&#39;, we need to add the package into our pubspec.yaml.</li>
+</ol>
+<p>For the function:</p>
+<pre><code>void request(String prompt) {
+
+    Dio client = Dio();
+    client.options.baseUrl = &#34;https://api.openai.com/v1/&#34;;
+
+    /// Set API token
+    String token = &#34;&#34;;
+
+    final headers = &lt;String, Object&gt;{};
+    headers[HttpHeaders.authorizationHeader] = &#34;Bearer ${token}&#34;;
+    headers[HttpHeaders.acceptHeader] = &#39;application/json&#39;;
+    headers[HttpHeaders.contentTypeHeader] = &#39;application/json&#39;;
+
+    client.options.headers.addAll(headers);
+
+    var response = await client.post(&#34;completions&#34;, data: {
+      &#34;model&#34;: &#34;text-davinci-003&#34;,
+      &#34;prompt&#34;: prompt,
+      &#34;max_tokens&#34;: 1500,
+      &#34;stop&#34;: [&#34;You:&#34;]
+    });
+    print(&#34;response: $response&#34;);
+}
+
+</code></pre>
+<p>We are almost there...</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Handle API response" duration="0">
+        <p>Ok so far, we have the screen view, with ListView and TextField, and are able to request the API, therefor we need to handle the response and update the UI.</p>
+<p>Easy challenge....</p>
+<pre><code>void request(String prompt) {
+    ...
+    var response = await client.post(&#34;completions&#34;, data: {
+    ...
+    print(&#34;response: $response&#34;);
+
+    /// lets parse the response
+    var json = response.data as Map&lt;String, dynamic&gt;;
+    var message = json[&#34;choices&#34;][0][&#34;text&#34;];
+    
+    print(&#34;message: $message&#34;);
+    // so message is the reponse string
+}
+</code></pre>
+<p>Now that we can parse the response lets continue to update the UI</p>
+<pre><code>void request(String prompt) {
+    ...
+    print(&#34;message: $message&#34;);
+    // so message is the reponse string
+
+    setState(() {
+      _messages2.add(message);
+    });
+}
+</code></pre>
+<p>And finnally we need to add a widget to the ListView to see something:</p>
+<pre><code>class _ChatViewState extends State&lt;ChatView&gt; {
+
+    final List&lt;String&gt; _messages = [];
+
+    @override
+    Widget build(BuildContext context) {
+        ....
+        ListView.builder(
+            itemCount: 0,
+            itemBuilder: (BuildContext context, int index) {
+                    String item = _messages.elementAt(index);
+
+                    return Container(
+                      color: Colors.blue,
+                      child: Text(&#34;$item&#34;),
+                    );
+            }),
+        ),
+        ...
+</code></pre>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Ok. we go so far!" duration="0">
+        <p>How can we tweak it a bit to make it like an chat app?</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Running the app" duration="0">
+        <p>...</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Takeaways" duration="0">
+        <p>Hope you had some fun creating this app!</p>
+<p>Thank you for participaging in this codelab!</p>
+<p>If you have any feedback, don&#39;t esitate and contact us, we welcome feedback :)</p>
+<p class="image-container"><img src="img/8b429a20cce02356.png"></p>
+
+
+      </google-codelab-step>
+    
+  </google-codelab>
+
+  <script src="https://storage.googleapis.com/claat-public/native-shim.js"></script>
+  <script src="https://storage.googleapis.com/claat-public/custom-elements.min.js"></script>
+  <script src="https://storage.googleapis.com/claat-public/prettify.js"></script>
+  <script src="https://storage.googleapis.com/claat-public/codelab-elements.js"></script>
+  <script src="//support.google.com/inapp/api.js"></script>
+
+</body>
+</html>
