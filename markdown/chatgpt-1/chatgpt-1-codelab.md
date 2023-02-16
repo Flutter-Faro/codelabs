@@ -11,18 +11,19 @@ feedback link: https://github.com/flutter-faro/codelabs/blob/master/markdown/cha
 
 ## What you'll learn: Overview
 
-Duration: <TIME in min>
+Duration: 180 minutes
 
-This codelab ...
+This codelab is about creating a Chat app for us to talk with Open AI.
 
-The idea is to create ...
+The idea is to create a simple chat app for the user to be able to interact with different AI models of Open AI.
+For the purpose of this workshop we will focus on text completion models (text-davinci) and image models (dall-e)
 
-For the next hours we will be learning about how to ... :
-* step1...
-* step2...
-* ...
-* ...
-* ...
+For the next hours we will be learning about how to create a AI chat app :
+* Create a flutter app from scratch
+* Structure the flutter app to have a chat interface 
+* Create the API mechanism to communicate with Open AI's text-davinci
+* Create the API mechanism to communicate with Open AI's images interface (DALL-E)
+* Show a Whisper flutter app example
 
 User will see on the screen... 
 ![](img/screen.png)
@@ -55,7 +56,7 @@ Plain Text followed by bullets
 
 ### Prerequisites
 
-Duration: <TIME in minutes>
+Duration: 30 minutes
 
 
 ⚠️ Required materials
@@ -100,13 +101,25 @@ You should now have your Flutter demo app running.
 
 ## Prepare ChatGPT stuff
 
+We are going to create an app called Chatty. 
+
+### Chatty will be responsible for relaying our communications to OpenAI:
+1. Set up a simple screen with a text input, a button that sends the text prompt
+2. Set a bar on top, identifying our AI model we're talking to.
+3. Set up the screen with the chat's history, composed of bubbles. Our messages appear on bubbles from the right side. Open AI's messages appear on bubbles comming from the left side.
+
+![](img/screen1davinci.png)
+
+![](img/screen2dalle.png)
 
 ```
 CODE
 ```
 
 
-## Connecting to ...
+## Connecting to Open AI's API
+
+![](img/openAIsequence.png)
 
 
 ## ...
