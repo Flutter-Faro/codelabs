@@ -93,6 +93,9 @@ And test run the app by executing
 
 You should now have your Flutter demo app running.
 
+![](img/flutter_demo_app.png)
+
+
 ## Prepare ChatGPT stuff
 
 We are going to create an app called Chatty. 
@@ -106,7 +109,7 @@ We are going to create an app called Chatty.
 
 Lets create a ```StatefulWidget``` called 'ChatView' this will be our screen to hold the message bubbles and the input to request.
 
-On creating a new ```StatefulWidget``` you should have something this:
+When creating a new ```StatefulWidget``` you should have something this:
 
 ```
 class ChatView extends StatefulWidget {
@@ -131,7 +134,7 @@ class _ChatViewState extends State<ChatView> {
 
 So you have created a new ```StatefulWidget```, now lets complete it, whats missing?
 
-Right, so we need to add a ListView to hold the message bubbles and a TextField.
+Right, we need to add a ListView to hold the message bubbles and a TextField.
 
 ```
 class _ChatViewState extends State<ChatView> {
@@ -157,8 +160,7 @@ class _ChatViewState extends State<ChatView> {
 
 Hmm 🤔 is this all? 
 
-Hehe of course its still imcomplete, lets think, we need somehow to store the messages to be presented and
-added to the ListView.
+Hehe of course its still incomplete, lets think, we need to store somehow the messages. This will then be used to add to the ListView so that messages are presented.
 
 Ok no problem!
 
@@ -178,7 +180,7 @@ class _ChatViewState extends State<ChatView> {
 
 Ok, try to do a hot reload to apply the changes.
 
-So, now we need to focus on the TextField to listen for keyboard changes:
+Now we need to focus on the TextField that will listen to the keyboard changes:
 
 ```
 class _ChatViewState extends State<ChatView> {
@@ -214,10 +216,16 @@ for requesting the API:
 
 Now is the fun part, requesting stuff!!!
 
-1. Lets create a new function for doing the request, you can create this funtion below the ```Widget build(BuildContext context) {}``` and name it 'request' and recieves a String as the only argument.
+Lets create a new function for doing the request, you can create this funtion below the 
+
+```Widget build(BuildContext context) {}``` 
+
+and name it 'request' and recieves a String as the only argument.
+
 For doing the requests we'll use the package 'Dio', we need to add the package into our pubspec.yaml.
 
 For the function:
+
 
 ```
 void request(String prompt) {
@@ -245,6 +253,7 @@ void request(String prompt) {
 }
 
 ```
+
 
 We are almost there...
 
@@ -312,10 +321,22 @@ class _ChatViewState extends State<ChatView> {
 
 How can we tweak it a bit to make it like an chat app?
 
+Explore ChatGPT  prompts, example:
 
-## Running the app
+```
 
-...
+Text = “In 2019, OpenAI transitioned from non-profit to 'capped' for-profit, with the profit capped at 100 times any investment. According to OpenAI, the capped-profit model allows OpenAI LP to legally attract investment from venture funds, and in addition, to grant employees stakes in the company, the goal being that they can say 'I'm going to OpenAI, but in the long term it's not going to be disadvantageous to us as a family.' Many top researchers work for Google Brain, DeepMind, or Facebook, which offer stock options that a nonprofit would be unable to. Prior to the transition, public disclosure of the compensation of top employees at OpenAI was legally required.
+
+The company then distributed equity to its employees and partnered with Microsoft and Matthew Brown Companies, who announced an investment package of $1 billion into the company. OpenAI also announced its intention to commercially license its technologies. OpenAI plans to spend the $1 billion 'within five years, and possibly much faster'. Altman has stated that even a billion dollars may turn out to be insufficient, and that the lab may ultimately need 'more capital than any non-profit has ever raised' to achieve artificial general intelligence.
+
+The transition from a nonprofit to a capped-profit company was viewed with skepticism by Oren Etzioni of the nonprofit Allen Institute for AI, who agreed that wooing top researchers to a nonprofit is difficult, but stated 'I disagree with the notion that a nonprofit can't compete' and pointed to successful low-budget projects by OpenAI and others. 'If bigger and better funded was always better, then IBM would still be number one.'
+
+The nonprofit, OpenAI Inc., is the sole controlling shareholder of OpenAI LP. OpenAI LP, despite being a for-profit company, retains a formal fiduciary responsibility to OpenAI Inc.'s nonprofit charter. A majority of OpenAI Inc.'s board is barred from having financial stakes in OpenAI LP. In addition, minority members with a stake in OpenAI LP are barred from certain votes due to conflict of interest. Some researchers have argued that OpenAI LP's switch to for-profit status is inconsistent with OpenAI's claims to be 'democratizing' AI. A journalist at Vice News wrote that 'generally, we've never been able to rely on venture capitalists to better humanity'.”
+
+1. EXTRACT ALL PERSON PARTICIPANS NAME , FROM THE TEXT ABOVE:
+2. EXTRACT ALL COMPANY NAMES , FROM THE TEXT ABOVE:
+
+```
 
 ## Takeaways
 
