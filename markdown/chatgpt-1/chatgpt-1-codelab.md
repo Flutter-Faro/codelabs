@@ -279,7 +279,7 @@ void request(String prompt) {
     // so message is the reponse string
 
     setState(() {
-      _messages2.add(message);
+      _messages.add(message);
     });
 }
 ```
@@ -301,7 +301,7 @@ class _ChatViewState extends State<ChatView> {
 
                     return Container(
                       color: Colors.blue,
-                      child: Text("$item"),
+                      child: Text(item),
                     );
             }),
         ),
