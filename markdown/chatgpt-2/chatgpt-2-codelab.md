@@ -25,28 +25,7 @@ For the next hours we will be learning about:
 * Create the API mechanism to communicate with Open AI's Whisper model
 * Show a Whisper flutter app example
 
-![](img/event_3.jpg)
-
-<!-- Negative
-: This will appear in a yellow info box.
-
-Positive
-: This will appear in a green info box. -->
-
-<!-- ### Bullets
-Plain Text followed by bullets
-* Hello
-* CodeLab
-* World
-
-### Numbered List
-1. List
-1. Using
-1. Numbers
-
-### Add an Image or a GIF
-
-![Soly Image Caption](img/soly.gif) -->
+![](img/event_4.png)
 
 ## What you need: Prerequisites
 
@@ -65,16 +44,6 @@ After you should be able to run `flutter doctor` without any errors.
 A device and cable to connect to the laptop (iOS or Android ) OR an Emulator (iOS or Android). For Android you can install [Android Studio](https://developer.android.com/studio) or the "Command line tools only". 
 
 [VS Code](https://code.visualstudio.com/) installed with Dart and Flutter Extensions.
-
-<!-- 
-### Add a Link
-Add a link!
-[Example of a Link](https://www.google.com)
-
-### Embed an iframe
-
-![https://codepen.io/tzoght/embed/yRNZaP](https://en.wikipedia.org/wiki/File:Example.jpg "Try Me Publisher")
--->
 
 ## Create Flutter App
 
@@ -204,12 +173,12 @@ class _ChatViewState extends State<ChatView> {
 ```
 
 
-## Open AI's API Flow
+<!-- ## Open AI's API Flow
 
 To give you an idea of what will happen, this flow show's the process
 for requesting the API:
 
-![](img/openAIsequence.jpg)
+![](img/openAIsequence.jpg) -->
 
 
 ## Connecting to API
@@ -316,6 +285,251 @@ class _ChatViewState extends State<ChatView> {
         ),
         ...
 ```
+
+## Connecting to Whisper API
+
+Ok so far we can request the api to answer to the text, lets get the whisper working.
+
+Lets create another function that will request the `Whisper` API, call it `requestFromAudio`
+
+Here what should like:
+
+```
+void requestFromAudio({required String audioPath}) async {
+    Dio client = Dio();
+    client.options.baseUrl = "https://api.openai.com/v1/";
+
+    /// Set API token
+    String token = Env.apiKey;
+
+    final headers = <String, Object>{};
+    headers[HttpHeaders.authorizationHeader] = "Bearer $token";
+    headers[HttpHeaders.acceptHeader] = 'application/json';
+    headers[HttpHeaders.contentTypeHeader] = 'multipart/form-data';
+
+    client.options.headers.addAll(headers);
+
+    MultipartFile multipartFile;
+    File? file;
+    try {
+        file = File.fromUri(Uri.file(audioPath)); // <= returns File
+    } catch (e) {
+        print("error: $e");
+    }
+    multipartFile = await MultipartFile.fromFile(file!.path, filename: "file_01.m4a");
+
+    FormData formData = FormData.fromMap({"model": "whisper-1", "file": multipartFile});
+    var response = await client.post("audio/transcriptions", data: formData);
+
+    var json = response.data as Map<String, dynamic>;
+    final String prompt = json["text"];
+
+    setState(() {
+      _messages.add(prompt);
+    });
+
+  }
+
+```
+
+⚠️ In order to work with web will need extra code to parse the file
+add this code below before creating the `formData`
+```
+    /// for web we'll need to send it as bytes
+    if (kIsWeb) {
+      /// first get the blob path and parse it
+      final result = await http.get(Uri.parse(audioPath));
+
+      /// then convert to bytes
+      Uint8List data = result.bodyBytes.buffer.asUint8List();
+
+      multipartFile = MultipartFile.fromBytes(data, filename: "audio.m4a");
+    }
+```
+
+## Whsiperrrr audio
+
+Ok we have now the request to send it to the API, but we are missing something, right?
+
+Where's the audio file? 😮😮😮😮
+
+No worries, lets work on the ´AudioRecorder´ Widget!!
+
+Lets create a ```StatefulWidget``` called 'AudioRecorder' this will be our widget to record an audio from mic.
+
+⚠️ Can check Step <a href="./#3" target="_self" >#4 - Prepare ChatGPT stuff</a>
+
+We should have something like this:
+
+```
+class AudioRecorder extends StatefulWidget {
+  const AudioRecorder({Key? key}) : super(key: key);
+
+  @override
+  State<AudioRecorder> createState() => _SimpleAudioRecorderState();
+}
+
+class _SimpleAudioRecorderState extends State<AudioRecorder> {
+  
+  @override
+  Widget build(BuildContext context) {
+    ...
+  }
+
+}
+```
+
+## Record Audio
+
+To record an Audio from the mic, we will need to add a new package called `record`. 
+
+To add a nw package, you can check the pub page [here](https://pub.dev/packages/record)
+
+Follow the installing guide, you should be done with the package added to ´pubscpec.yaml´
+
+Now lets go back to the ´AudioRecorder´ Widget, and will import and create a ´Record´ instance.
+
+With this instance created we will need a ´Start´ and ´Stop´ functions too
+
+```
+class _SimpleAudioRecorderState extends State<AudioRecorder> {
+
+  // <-- add this lines 
+  final _audioRecorder = Record(); 
+  bool isRecording = false;
+
+  // to start recording
+  Future<void> _start() async {
+    debugPrint("_start");
+    try {
+      if (await _audioRecorder.hasPermission()) {
+        setState(() {
+          isRecording = true;
+        });
+        await _audioRecorder.start(path: "/tmp/file.m4a");
+      }
+    } catch (e) {
+      debugPrint("Exception: $e");
+    }
+
+    isRecording = await _audioRecorder.isRecording();
+  }
+
+  /// to stop recording
+  Future<void> _stop() async {
+    final path = await _audioRecorder.stop();
+
+    isRecording = false;
+
+    if (path != null) {
+      widget.onStop(path);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container();
+  }
+
+  @override
+  void dispose() {
+    _audioRecorder.dispose();
+    super.dispose();
+  }
+}
+```
+
+## UI for AudioRecorder
+
+Hmmm i think there is an error, right? 
+
+It cannot find a reference to ´widget.onStop(path);´, lets fix this, go back to the ´AudioRecorder´ widget here:
+
+```
+class AudioRecorder extends StatefulWidget {
+  // <-- add this line 
+  final void Function(String path) onStop; 
+  
+  // <-- update this line, add the ´required this.onStop´
+  const AudioRecorder({Key? key, required this.onStop}) : super(key: key); 
+
+  @override
+  State<AudioRecorder> createState() => _SimpleAudioRecorderState();
+}
+```
+
+Ok, thats done then, lets focus on the UI now:
+
+```
+...
+  @override
+  Widget build(BuildContext context) {
+    return ClipOval(
+        child: InkWell(
+      child: SizedBox(width: 56, height: 56, child: icon),
+      onTap: () {
+        debugPrint("Record button tap: $isRecording");
+        isRecording ? _stop() : _start();
+      },
+    ));
+  }
+
+  Icon get icon {
+    if (isRecording) {
+      return const Icon(Icons.stop, color: Colors.red, size: 30);
+    }
+    return const Icon(Icons.mic, color: Colors.blue, size: 30);
+  }
+...
+```
+
+And finally lets got back to `ChatView` and add the `AudioRecorder` Widget
+
+```
+AudioRecorder(
+    onStop: (path) {
+        debugPrint('Recorded file path: $path');
+        setState(() {
+        audioPath = path;
+        });
+
+        requestFromAudio(audioPath: audioPath!);
+    },
+)
+```
+Where should we put this? 😂😂😂
+
+## Let them talk 😂😂
+
+How about making what we receive from the API to talk back, that will be fun!!!
+
+Ok lets do some updates:
+
+`void requestFromAudio({required String audioPath}) async {`
+
+change to this:
+
+`void requestFromAudio({required String audioPath, bool speakResponse = false}) async {`
+
+and then add this:
+
+```
+// Flutter tts
+debugPrint("requestFromAudio (prompt): $prompt");
+var text = await requestText(prompt: prompt);
+
+if (speakResponse) {
+    FlutterTts flutterTts = FlutterTts();
+    await flutterTts.setLanguage("en-US");
+    await flutterTts.setPitch(0.8);
+    await flutterTts.speak(text);
+}
+```
+
+⚠️ ⚠️ Remember has `FlutterTts` will be a package so needs to be added to `pubscpec.yaml`
+
+⚠️ ⚠️ And `requestText` is from the previous steps 
+
 
 ## Ok. we go so far!
 

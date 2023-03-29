@@ -4,7 +4,7 @@
   "description": "use nodemon to watch changes on md file, rebuild codelab on saves",
   "main": "index.js",
   "scripts": {
-    "watch": "nodemon --watch chatgpt-1-codelab.md --exec \"claat export -o temp/ chatgpt-1-codelab.md && ./node_modules/kill-port/cli.js --port 9090 && cd temp/chatgpt-1-codelab && claat serve\""
+    "watch": "nodemon --watch chatgpt-2-codelab.md --exec \"claat export -o temp/ chatgpt-2-codelab.md && ./node_modules/kill-port/cli.js --port 9090 && cd temp/chatgpt-2-codelab && claat serve\""
   },
   "repository": {
     "type": "git",
