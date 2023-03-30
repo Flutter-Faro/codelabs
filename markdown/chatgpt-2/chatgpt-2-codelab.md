@@ -226,7 +226,7 @@ Lets create a new function for doing the request, you can create this funtion be
 
 and name it `request`. It recieves a String as the only argument.
 
-For doing the requests we'll use the package `Dio`, we need to add the package into pubspec.yaml file. Run `flutter pub get` or use VS code to get dependencies.
+For doing the requests we'll use the package `Dio`, we need to add the package to chatty. Run `flutter pub add dio` or update pubspec.yaml and run 'flutter pub get' or use VS code to get dependencies.
 
 
 For the function:
@@ -298,7 +298,7 @@ void request(String prompt) {
 }
 ```
 
-And finnally we need to add a widget to the ListView to see something:
+And finally we need to add a widget to the ListView to see something:
 
 ```
 class _ChatViewState extends State<ChatView> {
