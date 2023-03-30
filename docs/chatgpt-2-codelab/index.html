@@ -196,7 +196,7 @@ OPEN_AI_API_KEY=&lt;YOUR_OPEN_API_KEY&gt;
 <p>Lets create a new function for doing the request, you can create this funtion below the</p>
 <p><code>Widget build(BuildContext context) {}</code></p>
 <p>and name it <code>request</code>. It recieves a String as the only argument.</p>
-<p>For doing the requests we&#39;ll use the package <code>Dio</code>, we need to add the package into pubspec.yaml file. Run <code>flutter pub get</code> or use VS code to get dependencies.</p>
+<p>For doing the requests we&#39;ll use the package <code>Dio</code>, we need to add the package to chatty. Run <code>flutter pub add dio</code> or update pubspec.yaml and run ‘flutter pub get&#39; or use VS code to get dependencies.</p>
 <p>For the function:</p>
 <pre><code>void request(String prompt) {
 
@@ -256,7 +256,7 @@ OPEN_AI_API_KEY=&lt;YOUR_OPEN_API_KEY&gt;
     });
 }
 </code></pre>
-<p>And finnally we need to add a widget to the ListView to see something:</p>
+<p>And finally we need to add a widget to the ListView to see something:</p>
 <pre><code>class _ChatViewState extends State&lt;ChatView&gt; {
 
     final List&lt;String&gt; _messages = [];
