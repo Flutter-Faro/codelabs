@@ -1,0 +1,25 @@
+{
+  "environment": "web",
+  "format": "html",
+  "prefix": "https://storage.googleapis.com",
+  "mainga": "UA-49880327-14",
+  "updated": "2023-03-30T10:04:22+01:00",
+  "id": "chatgpt-2-codelab",
+  "duration": 0,
+  "title": "Flutter ChatGPT + Whisper Workshop - FlutterFaro #4",
+  "summary": "Flutter ChatGPT + Whisper codelabs",
+  "source": "chatgpt-2-codelab.md",
+  "theme": "",
+  "status": [
+    "published"
+  ],
+  "category": null,
+  "tags": [
+    "chatgtp",
+    "flutter",
+    "flutterfaro",
+    "web"
+  ],
+  "feedback": "https://github.com/flutter-faro/codelabs/blob/master/markdown/chatgpt-2-codelab",
+  "url": "chatgpt-2-codelab"
+}

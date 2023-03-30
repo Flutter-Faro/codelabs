@@ -1,0 +1,537 @@
+
+<!doctype html>
+
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <meta name="theme-color" content="#4F7DC9">
+  <meta charset="UTF-8">
+  <title>Flutter ChatGPT &#43; Whisper Workshop - FlutterFaro #4</title>
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Source+Code+Pro:400|Roboto:400,300,400italic,500,700|Roboto+Mono">
+  <link rel="stylesheet" href="//fonts.googleapis.com/icon?family=Material+Icons">
+  <link rel="stylesheet" href="https://storage.googleapis.com/claat-public/codelab-elements.css">
+  <style>
+    .success {
+      color: #1e8e3e;
+    }
+    .error {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <google-codelab-analytics gaid="UA-49880327-14"></google-codelab-analytics>
+  <google-codelab codelab-gaid=""
+                  id="chatgpt-2-codelab"
+                  title="Flutter ChatGPT &#43; Whisper Workshop - FlutterFaro #4"
+                  environment="web"
+                  feedback-link="https://github.com/flutter-faro/codelabs/blob/master/markdown/chatgpt-2-codelab">
+    
+      <google-codelab-step label="What you&#39;ll learn: Overview" duration="0">
+        <p>This codelab is about to extend the previously created <a href="https://flutter-faro.github.io/codelabs/chatgpt-1-codelab/index.html" target="_blank">Chat app</a> to talk with Open AI.</p>
+<p>The idea is to add the capacity for the Chat app to transcript speech-to-text to interact with ChatGPT using voice prompts.</p>
+<p>For the purpose of this workshop we will focus on using previously created <a href="https://flutter-faro.github.io/codelabs/chatgpt-1-codelab/index.html" target="_blank">Chat app</a> and extend modules, service interface to connect to <a href="https://platform.openai.com/docs/guides/speech-to-text" target="_blank">OpenAI Whisper model</a>.</p>
+<p>For the next hours we will be learning about:</p>
+<ul>
+<li>Create a flutter app from scratch</li>
+<li>About Chatty flutter app Structure and interface</li>
+<li>Create the API mechanism to communicate with Open AI&#39;s Whisper model</li>
+<li>Show a Whisper flutter app example</li>
+</ul>
+<p class="image-container"><img src="img/9857e44805876330.png"></p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="What you need: Prerequisites" duration="0">
+        <h2 is-upgraded>Prerequisites</h2>
+<p>⚠️ Required materials</p>
+<ul>
+<li>Computer with internet access :). For the best experience, the laptop should have <a href="https://www.flutter.dev/" target="_blank">Flutter</a> installed on it prior to starting the codelab to save time. Windows/Linux/Mac would all be fine.</li>
+<li>Check out <a href="https://flutter.dev/docs/get-started/install" target="_blank">Install Flutter</a>. After you should be able to run <code>flutter doctor</code> without any errors.</li>
+<li>A device and cable to connect to the laptop (iOS or Android ) OR an Emulator (iOS or Android). For Android you can install <a href="https://developer.android.com/studio" target="_blank">Android Studio</a> or the &#34;Command line tools only&#34;.</li>
+<li><a href="https://code.visualstudio.com/" target="_blank">VS Code</a> installed with Dart and Flutter Extensions.</li>
+</ul>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Create Flutter App" duration="0">
+        <p>Make sure to run &#34;flutter doctor&#34; to check if everything is ok and there are no problems with your flutter installation.</p>
+<p>To create a new flutter app, just run</p>
+<p><code>flutter create chatty</code></p>
+<p>If all runs properly...</p>
+<p class="image-container"><img src="img/f89a97a1f9b7d26.jpg"></p>
+<p>And test run the app by executing <code>cd chatty; flutter run</code></p>
+<p>You should now have your Flutter demo app running.</p>
+<p class="image-container"><img src="img/dadf7c4d9bb28701.png"></p>
+<p>Add packages to flutter pubspec.yaml file:</p>
+<pre><code>...
+
+dependencies
+  http: ^0.13.5
+  dio: ^5.1.0
+  jumping_dot: ^0.0.4
+
+  path_provider: ^2.0.14
+  provider: ^6.0.5
+
+  envied: ^0.3.0
+  record: ^4.4.4
+
+...
+
+dev_dependencies:
+  
+  flutter_lints: ^2.0.0
+  envied_generator: ^0.3.0
+  build_runner: ^2.3.3
+
+...
+</code></pre>
+<p>Use VS code to get dependencies or run <code>flutter pub get</code> from inside chatty project folder.</p>
+<p>Create the <code>.env</code> file inside project root directory:</p>
+<pre><code>// .env
+OPEN_AI_API_KEY=&lt;YOUR_OPEN_API_KEY&gt;
+
+</code></pre>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Prepare ChatGPT stuff" duration="0">
+        <p>We are going to create an app called Chatty.</p>
+<h2 is-upgraded>Chatty will be responsible for relaying our communications to OpenAI:</h2>
+<ol type="1">
+<li>Set up a simple screen with a text input, a button that sends the text prompt</li>
+<li>Set AppBar, identifying our AI model we&#39;re talking to.</li>
+<li>Set up the screen with the chat&#39;s history, composed of bubbles. Our messages appear on bubbles from the right side. Open AI&#39;s messages appear on bubbles comming from the left side.</li>
+</ol>
+<p class="image-container"><img src="img/4f44cfee026aa028.jpg"></p>
+<p>Lets create a <code>StatefulWidget</code> called ‘ChatView&#39; this will be our screen to hold the message bubbles and the input to request.</p>
+<p>When creating a new <code>StatefulWidget</code> you should have something this:</p>
+<pre><code>class ChatView extends StatefulWidget {
+    const ChatView({Key? key}) : super(key: key);
+
+    @override
+    State&lt;ChatView&gt; createState() =&gt; _ChatViewState();
+}
+</code></pre>
+<pre><code>class _ChatViewState extends State&lt;ChatView&gt; {
+    
+    @override
+    Widget build(BuildContext context) {
+        ....
+    }
+}
+</code></pre>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="ChatView" duration="0">
+        <p>So you have created a new <code>StatefulWidget</code>, now lets complete it, whats missing?</p>
+<p>Right, we need to add a ListView to hold the message bubbles and a TextField.</p>
+<pre><code>class _ChatViewState extends State&lt;ChatView&gt; {
+    
+    @override
+    Widget build(BuildContext context) {
+        return Scaffold(
+            appBar: AppBar(
+                title: const Text(&#34;Chat&#34;),
+            ),
+            body: Column(
+                children: [
+                    ListView.builder(
+                        itemCount: 0,
+                        itemBuilder: (BuildContext context, int index) {
+
+                        }),
+                    TextFormField()
+            ]));
+    }
+}
+</code></pre>
+<p>Hmm 🤔 is this all?</p>
+<p>Hehe of course its still incomplete, lets think, we need to store somehow the messages. This will then be used to add to the ListView so that messages are presented.</p>
+<p>Ok no problem!</p>
+<p>Lets create a List data <code>final List<String> _messages</code></p>
+<pre><code>class _ChatViewState extends State&lt;ChatView&gt; {
+
+    final List&lt;String&gt; _messages = [];
+
+    @override
+    Widget build(BuildContext context) {
+        ....
+}
+
+</code></pre>
+<p>Ok, try to do a hot reload to apply the changes.</p>
+<p>Now we need to focus on the TextField that will listen to the keyboard changes:</p>
+<pre><code>class _ChatViewState extends State&lt;ChatView&gt; {
+
+    final List&lt;String&gt; _messages = [];
+
+    @override
+    Widget build(BuildContext context) {
+        ....
+        ListView.builder(...),
+        TextFormField(
+
+            /// add this:
+            textInputAction: TextInputAction.done,
+            onFieldSubmitted: (value) {
+
+            }
+        )
+        ....
+}
+</code></pre>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Connecting to API" duration="0">
+        <p>Now the fun part, requesting stuff!!!</p>
+<p>Lets create a new function for doing the request, you can create this funtion below the</p>
+<p><code>Widget build(BuildContext context) {}</code></p>
+<p>and name it <code>request</code>. It recieves a String as the only argument.</p>
+<p>For doing the requests we&#39;ll use the package <code>Dio</code>, we need to add the package into pubspec.yaml file. Run <code>flutter pub get</code> or use VS code to get dependencies.</p>
+<p>For the function:</p>
+<pre><code>void request(String prompt) {
+
+    Dio client = Dio();
+    client.options.baseUrl = &#34;https://api.openai.com/v1/&#34;;
+
+    /// Set API token
+    String token = &#34;&#34;;
+
+    final headers = &lt;String, Object&gt;{};
+    headers[HttpHeaders.authorizationHeader] = &#34;Bearer ${token}&#34;;
+    headers[HttpHeaders.acceptHeader] = &#39;application/json&#39;;
+    headers[HttpHeaders.contentTypeHeader] = &#39;application/json&#39;;
+
+    client.options.headers.addAll(headers);
+
+    var response = await client.post(&#34;completions&#34;, data: {
+      &#34;model&#34;: &#34;text-davinci-003&#34;,
+      &#34;prompt&#34;: prompt,
+      &#34;max_tokens&#34;: 1500,
+      &#34;stop&#34;: [&#34;You:&#34;]
+    });
+    print(&#34;response: $response&#34;);
+}
+
+</code></pre>
+<p>We are almost there...</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Handle API response" duration="0">
+        <p>Ok so far, we have the screen view, with ListView and TextField, and are able to request the API, therefor we need to handle the response and update the UI.</p>
+<p>Easy challenge....</p>
+<pre><code>void request(String prompt) {
+    ...
+    var response = await client.post(&#34;completions&#34;, data: {
+    ...
+    print(&#34;response: $response&#34;);
+
+    /// lets parse the response
+    var json = response.data as Map&lt;String, dynamic&gt;;
+    var message = json[&#34;choices&#34;][0][&#34;text&#34;];
+    
+    print(&#34;message: $message&#34;);
+    // so message is the reponse string
+}
+</code></pre>
+<p>Now that we can parse the response lets continue to update the UI</p>
+<pre><code>void request(String prompt) {
+    ...
+    print(&#34;message: $message&#34;);
+    // so message is the reponse string
+
+    setState(() {
+      _messages.add(message);
+    });
+}
+</code></pre>
+<p>And finnally we need to add a widget to the ListView to see something:</p>
+<pre><code>class _ChatViewState extends State&lt;ChatView&gt; {
+
+    final List&lt;String&gt; _messages = [];
+
+    @override
+    Widget build(BuildContext context) {
+        ....
+        ListView.builder(
+            itemCount: 0,
+            itemBuilder: (BuildContext context, int index) {
+                    String item = _messages.elementAt(index);
+
+                    return Container(
+                      color: Colors.blue,
+                      child: Text(item),
+                    );
+            }),
+        ),
+        ...
+</code></pre>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Connecting to Whisper API" duration="0">
+        <p>Ok so far we can request the api to answer to the text prompts, lets get the whisper working.</p>
+<p>Lets create another function that will make a request to <code>Whisper</code> model using <a href="https://platform.openai.com/docs/guides/speech-to-text" target="_blank">OpenAI speech-to-text API</a>. We can call it <code>requestFromAudio</code>. It receives one argument, a string that is the path to the user audio file.</p>
+<p>It should look like this bellow. So we fetch the OpenAI api token, prepare the http request headers and the multipart file to make the post request to the API. Once request is done we receive the result of the transcription of audio into text. This will become the prompt to query ChatGPT.</p>
+<pre><code>void requestFromAudio({required String audioPath}) async {
+    Dio client = Dio();
+    client.options.baseUrl = &#34;https://api.openai.com/v1/&#34;;
+
+    /// Set API token
+    String token = Env.apiKey;
+
+    final headers = &lt;String, Object&gt;{};
+    headers[HttpHeaders.authorizationHeader] = &#34;Bearer $token&#34;;
+    headers[HttpHeaders.acceptHeader] = &#39;application/json&#39;;
+    headers[HttpHeaders.contentTypeHeader] = &#39;multipart/form-data&#39;;
+
+    client.options.headers.addAll(headers);
+
+    MultipartFile multipartFile;
+    File? file;
+    try {
+        file = File.fromUri(Uri.file(audioPath)); // &lt;= returns File
+    } catch (e) {
+        print(&#34;error: $e&#34;);
+    }
+    multipartFile = await MultipartFile.fromFile(file!.path, filename: &#34;file_01.m4a&#34;);
+
+    FormData formData = FormData.fromMap({&#34;model&#34;: &#34;whisper-1&#34;, &#34;file&#34;: multipartFile});
+    var response = await client.post(&#34;audio/transcriptions&#34;, data: formData);
+
+    var json = response.data as Map&lt;String, dynamic&gt;;
+    final String prompt = json[&#34;text&#34;];
+
+    setState(() {
+      _messages.add(prompt);
+    });
+
+  }
+
+</code></pre>
+<p>⚠️ In order to work with web will need extra code to parse the file add this code below before creating the <code>formData</code></p>
+<pre><code>    /// for web we&#39;ll need to send it as bytes
+    if (kIsWeb) {
+      /// first get the blob path and parse it
+      final result = await http.get(Uri.parse(audioPath));
+
+      /// then convert to bytes
+      Uint8List data = result.bodyBytes.buffer.asUint8List();
+
+      multipartFile = MultipartFile.fromBytes(data, filename: &#34;audio.m4a&#34;);
+    }
+</code></pre>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Whisperrrr audio" duration="0">
+        <p>Ok we have now the function <code>requestFromAudio()</code> to send it to the API, but we are missing something, right?</p>
+<p>Where&#39;s the audio file? 😮😮😮😮</p>
+<p>No worries, lets work on the ´AudioRecorder´ Widget!!</p>
+<p>Lets create a <code>StatefulWidget</code> called ‘AudioRecorder&#39; this will be our widget to record an audio from mic.</p>
+<p>⚠️ Can check Step <a href="./#3" target="_self">#4 - Prepare ChatGPT stuff</a></p>
+<p>We should have something like this:</p>
+<pre><code>class AudioRecorder extends StatefulWidget {
+  const AudioRecorder({Key? key}) : super(key: key);
+
+  @override
+  State&lt;AudioRecorder&gt; createState() =&gt; _SimpleAudioRecorderState();
+}
+
+class _SimpleAudioRecorderState extends State&lt;AudioRecorder&gt; {
+  
+  @override
+  Widget build(BuildContext context) {
+    ...
+  }
+
+}
+</code></pre>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Record Audio" duration="0">
+        <p>To record an Audio from the mic, we will need to add a new package called <code>record</code>.</p>
+<p>To add a new package, you can check the pub page <a href="https://pub.dev/packages/record" target="_blank">here</a></p>
+<p>Follow the installing guide, you should be done once the package is added to ´pubscpec.yaml´ and device spcific permittion configs are also done.</p>
+<p>Now lets go back to the ´AudioRecorder´ Widget, and will import and create a ´Record´ instance.</p>
+<p>With this instance created we will need a ´Start´ and ´Stop´ functions too</p>
+<pre><code>class _SimpleAudioRecorderState extends State&lt;AudioRecorder&gt; {
+
+  // &lt;-- add this lines 
+  final _audioRecorder = Record(); 
+  bool isRecording = false;
+
+  // to start recording
+  Future&lt;void&gt; _start() async {
+    debugPrint(&#34;_start&#34;);
+    try {
+      if (await _audioRecorder.hasPermission()) {
+        setState(() {
+          isRecording = true;
+        });
+        await _audioRecorder.start(path: &#34;/tmp/file.m4a&#34;);
+      }
+    } catch (e) {
+      debugPrint(&#34;Exception: $e&#34;);
+    }
+
+    isRecording = await _audioRecorder.isRecording();
+  }
+
+  /// to stop recording
+  Future&lt;void&gt; _stop() async {
+    final path = await _audioRecorder.stop();
+
+    isRecording = false;
+
+    if (path != null) {
+      widget.onStop(path);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container();
+  }
+
+  @override
+  void dispose() {
+    _audioRecorder.dispose();
+    super.dispose();
+  }
+}
+</code></pre>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="UI for AudioRecorder" duration="0">
+        <p>Hmmm i think there is an error, right?</p>
+<p>It cannot find a reference to ´widget.onStop(path);´, lets fix this, go back to the ´AudioRecorder´ widget here:</p>
+<pre><code>class AudioRecorder extends StatefulWidget {
+  // &lt;-- add this line 
+  final void Function(String path) onStop; 
+  
+  // &lt;-- update this line, add the ´required this.onStop´
+  const AudioRecorder({Key? key, required this.onStop}) : super(key: key); 
+
+  @override
+  State&lt;AudioRecorder&gt; createState() =&gt; _SimpleAudioRecorderState();
+}
+</code></pre>
+<p>Ok, thats done then, lets focus on the UI now:</p>
+<pre><code>...
+  @override
+  Widget build(BuildContext context) {
+    return ClipOval(
+        child: InkWell(
+      child: SizedBox(width: 56, height: 56, child: icon),
+      onTap: () {
+        debugPrint(&#34;Record button tap: $isRecording&#34;);
+        isRecording ? _stop() : _start();
+      },
+    ));
+  }
+
+  Icon get icon {
+    if (isRecording) {
+      return const Icon(Icons.stop, color: Colors.red, size: 30);
+    }
+    return const Icon(Icons.mic, color: Colors.blue, size: 30);
+  }
+...
+</code></pre>
+<p>And finally lets got back to <code>ChatView</code> and add the <code>AudioRecorder</code> Widget</p>
+<pre><code>AudioRecorder(
+    onStop: (path) {
+        debugPrint(&#39;Recorded file path: $path&#39;);
+        setState(() {
+        audioPath = path;
+        });
+
+        requestFromAudio(audioPath: audioPath!);
+    },
+)
+</code></pre>
+<p>Where should we put this? 😂😂😂</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Let them talk 😂😂" duration="0">
+        <p>How about making what we receive from the API to talk back, that will be fun!!!</p>
+<p>Ok lets do some updates:</p>
+<p><code>void requestFromAudio({required String audioPath}) async {</code></p>
+<p>change to this:</p>
+<p><code>void requestFromAudio({required String audioPath, bool speakResponse = false}) async {</code></p>
+<p>and then add this:</p>
+<pre><code>// Flutter tts
+debugPrint(&#34;requestFromAudio (prompt): $prompt&#34;);
+var text = await requestText(prompt: prompt);
+
+if (speakResponse) {
+    FlutterTts flutterTts = FlutterTts();
+    await flutterTts.setLanguage(&#34;en-US&#34;);
+    await flutterTts.setPitch(0.8);
+    await flutterTts.speak(text);
+}
+</code></pre>
+<p>⚠️ ⚠️ Remember has <code>FlutterTts</code> will be a package so needs to be added to <code>pubscpec.yaml</code></p>
+<p>⚠️ ⚠️ And <code>requestText</code> is from the previous steps</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Ok. we go so far!" duration="0">
+        <p>How can we tweak it a bit to make it like an chat app?</p>
+<p>Explore ChatGPT  prompts, example:</p>
+<pre><code>Text = &#34;In 2019, OpenAI transitioned from non-profit to &#39;capped&#39; for-profit, with the profit capped at 100 times any investment. According to OpenAI, the capped-profit model allows OpenAI LP to legally attract investment from venture funds, and in addition, to grant employees stakes in the company, the goal being that they can say &#39;I&#39;m going to OpenAI, but in the long term it&#39;s not going to be disadvantageous to us as a family.&#39; Many top researchers work for Google Brain, DeepMind, or Facebook, which offer stock options that a nonprofit would be unable to. Prior to the transition, public disclosure of the compensation of top employees at OpenAI was legally required.
+
+The company then distributed equity to its employees and partnered with Microsoft and Matthew Brown Companies, who announced an investment package of $1 billion into the company. OpenAI also announced its intention to commercially license its technologies. OpenAI plans to spend the $1 billion &#39;within five years, and possibly much faster&#39;. Altman has stated that even a billion dollars may turn out to be insufficient, and that the lab may ultimately need &#39;more capital than any non-profit has ever raised&#39; to achieve artificial general intelligence.
+
+The transition from a nonprofit to a capped-profit company was viewed with skepticism by Oren Etzioni of the nonprofit Allen Institute for AI, who agreed that wooing top researchers to a nonprofit is difficult, but stated &#39;I disagree with the notion that a nonprofit can&#39;t compete&#39; and pointed to successful low-budget projects by OpenAI and others. &#39;If bigger and better funded was always better, then IBM would still be number one.&#39;
+
+The nonprofit, OpenAI Inc., is the sole controlling shareholder of OpenAI LP. OpenAI LP, despite being a for-profit company, retains a formal fiduciary responsibility to OpenAI Inc.&#39;s nonprofit charter. A majority of OpenAI Inc.&#39;s board is barred from having financial stakes in OpenAI LP. In addition, minority members with a stake in OpenAI LP are barred from certain votes due to conflict of interest. Some researchers have argued that OpenAI LP&#39;s switch to for-profit status is inconsistent with OpenAI&#39;s claims to be &#39;democratizing&#39; AI. A journalist at Vice News wrote that &#39;generally, we&#39;ve never been able to rely on venture capitalists to better humanity&#39;.&#34;
+
+1. EXTRACT ALL PERSON PARTICIPANS NAME , FROM THE TEXT ABOVE:
+2. EXTRACT ALL COMPANY NAMES , FROM THE TEXT ABOVE:
+
+</code></pre>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Takeaways" duration="0">
+        <p>Hope you had some fun creating this app!</p>
+<p>Thank you for participaging in this codelab!</p>
+<p>If you have any feedback, don&#39;t esitate and contact us, we welcome feedback :)</p>
+<p class="image-container"><img src="img/8b429a20cce02356.png"></p>
+
+
+      </google-codelab-step>
+    
+  </google-codelab>
+
+  <script src="https://storage.googleapis.com/claat-public/native-shim.js"></script>
+  <script src="https://storage.googleapis.com/claat-public/custom-elements.min.js"></script>
+  <script src="https://storage.googleapis.com/claat-public/prettify.js"></script>
+  <script src="https://storage.googleapis.com/claat-public/codelab-elements.js"></script>
+  <script src="//support.google.com/inapp/api.js"></script>
+
+</body>
+</html>
