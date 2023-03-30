@@ -13,11 +13,11 @@ feedback link: https://github.com/flutter-faro/codelabs/blob/master/markdown/cha
 
 Duration: 180 minutes
 
-This codelab is about to extend the previously created Chat app to talk with Open AI.
+This codelab is about to extend the previously created [Chat app](https://flutter-faro.github.io/codelabs/chatgpt-1-codelab/index.html) to talk with Open AI.
 
 The idea is to add the capacity for the Chat app to transcript speech-to-text to interact with ChatGPT using voice prompts.
 
-For the purpose of this workshop we will focus on using previously created Chat app and extend modules, service interface to connect to [OpenAI Whisper model](https://platform.openai.com/docs/guides/speech-to-text).
+For the purpose of this workshop we will focus on using previously created [Chat app](https://flutter-faro.github.io/codelabs/chatgpt-1-codelab/index.html) and extend modules, service interface to connect to [OpenAI Whisper model](https://platform.openai.com/docs/guides/speech-to-text).
 
 For the next hours we will be learning about:
 * Create a flutter app from scratch
@@ -36,14 +36,13 @@ Duration: 30 minutes
 
 ⚠️ Required materials
 
-Computer with internet access :). For the best experience, the laptop should have [Flutter](https://www.flutter.dev/) installed on it prior to starting the codelab to save time. Windows/Linux/Mac would all be fine.
+- Computer with internet access :). For the best experience, the laptop should have [Flutter](https://www.flutter.dev/) installed on it prior to starting the codelab to save time. Windows/Linux/Mac would all be fine.
 
-Check out: [Install Flutter](https://flutter.dev/docs/get-started/install)
-After you should be able to run `flutter doctor` without any errors.
+- Check out [Install Flutter](https://flutter.dev/docs/get-started/install). After you should be able to run `flutter doctor` without any errors.
 
-A device and cable to connect to the laptop (iOS or Android ) OR an Emulator (iOS or Android). For Android you can install [Android Studio](https://developer.android.com/studio) or the "Command line tools only". 
+- A device and cable to connect to the laptop (iOS or Android ) OR an Emulator (iOS or Android). For Android you can install [Android Studio](https://developer.android.com/studio) or the "Command line tools only". 
 
-[VS Code](https://code.visualstudio.com/) installed with Dart and Flutter Extensions.
+- [VS Code](https://code.visualstudio.com/) installed with Dart and Flutter Extensions.
 
 ## Create Flutter App
 
@@ -64,6 +63,42 @@ You should now have your Flutter demo app running.
 
 ![](img/flutter_demo_app.png)
 
+
+Add packages to flutter pubspec.yaml file:
+
+```
+...
+
+dependencies
+  http: ^0.13.5
+  dio: ^5.1.0
+  jumping_dot: ^0.0.4
+
+  path_provider: ^2.0.14
+  provider: ^6.0.5
+
+  envied: ^0.3.0
+  record: ^4.4.4
+
+...
+
+dev_dependencies:
+  
+  flutter_lints: ^2.0.0
+  envied_generator: ^0.3.0
+  build_runner: ^2.3.3
+
+...
+```
+
+Use VS code to get dependencies or run `flutter pub get` from inside chatty project folder.
+
+Create the `.env` file inside project root directory:
+```
+// .env
+OPEN_AI_API_KEY=<YOUR_OPEN_API_KEY>
+
+```
 
 ## Prepare ChatGPT stuff
 
@@ -183,15 +218,16 @@ for requesting the API:
 
 ## Connecting to API
 
-Now is the fun part, requesting stuff!!!
+Now the fun part, requesting stuff!!!
 
 Lets create a new function for doing the request, you can create this funtion below the 
 
 ```Widget build(BuildContext context) {}``` 
 
-and name it 'request' and recieves a String as the only argument.
+and name it `request`. It recieves a String as the only argument.
 
-For doing the requests we'll use the package 'Dio', we need to add the package into our pubspec.yaml.
+For doing the requests we'll use the package `Dio`, we need to add the package into pubspec.yaml file. Run `flutter pub get` or use VS code to get dependencies.
+
 
 For the function:
 
@@ -288,11 +324,11 @@ class _ChatViewState extends State<ChatView> {
 
 ## Connecting to Whisper API
 
-Ok so far we can request the api to answer to the text, lets get the whisper working.
+Ok so far we can request the api to answer to the text prompts, lets get the whisper working.
 
-Lets create another function that will request the `Whisper` API, call it `requestFromAudio`
+Lets create another function that will make a request to `Whisper` model using [OpenAI speech-to-text API](https://platform.openai.com/docs/guides/speech-to-text). We can call it `requestFromAudio`. It receives one argument, a string that is the path to the user audio file.
 
-Here what should like:
+It should look like this bellow. So we fetch the OpenAI api token, prepare the http request headers and the multipart file to make the post request to the API. Once request is done we receive the result of the transcription of audio into text. This will become the prompt to query ChatGPT.
 
 ```
 void requestFromAudio({required String audioPath}) async {
@@ -347,9 +383,9 @@ add this code below before creating the `formData`
     }
 ```
 
-## Whsiperrrr audio
+## Whisperrrr audio
 
-Ok we have now the request to send it to the API, but we are missing something, right?
+Ok we have now the function `requestFromAudio()` to send it to the API, but we are missing something, right?
 
 Where's the audio file? 😮😮😮😮
 
@@ -383,9 +419,9 @@ class _SimpleAudioRecorderState extends State<AudioRecorder> {
 
 To record an Audio from the mic, we will need to add a new package called `record`. 
 
-To add a nw package, you can check the pub page [here](https://pub.dev/packages/record)
+To add a new package, you can check the pub page [here](https://pub.dev/packages/record)
 
-Follow the installing guide, you should be done with the package added to ´pubscpec.yaml´
+Follow the installing guide, you should be done once the package is added to ´pubscpec.yaml´ and device spcific permittion configs are also done.
 
 Now lets go back to the ´AudioRecorder´ Widget, and will import and create a ´Record´ instance.
 
